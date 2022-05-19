@@ -8,15 +8,16 @@
 
 
 ## About
-[This repo](https://github.com/iarai/NeurIPS2022-traffic4cast) will all information about the Traffic4cast 2021 NeurIPS competition for participants. It
-contains detailed information about the competition and data as well as code and issue tracker.
+[This repo](https://github.com/iarai/NeurIPS2022-traffic4cast) will contain all information about the Traffic4cast 2021 NeurIPS competition for participants. It will contain detailed information about the competition and data as well as code and issue tracker.
 
 ## Introduction
 Our Traffic4cast competition series at NeurIPS has contributed both methodological and practical insights to advance the application of AI to forecasting traffic and other spatial processes. Now, going beyond the Traffic4cast challenges at NeurIPS 2019, 2020, and 2021, this year we will explore models that have the ability to **generalize loosely related temporal vertex data on just a few nodes** to **predict dynamic future traffic states on the edges of the entire road graph**. Specifically, in our core challenge we invite participants to predict for three cities the **congestion classes** known from the red, yellow, or green colouring of roads on a common traffic map for the entire road graph 15min into the future. We provide **car count data from spatially sparse vehicle counters** in these three cities in 15min aggregated time bins for one hour prior to the prediction time slot. For our extended challenge participants are asked to predict the **actual average speeds** on each road segment in the graph 15min into the future.
 
-Interested in understanding traffic around the globe in a novel way? [Join us](https://www.iarai.ac.at/traffic4cast/forums/) to help shape this year’s competition.
 
 ![traffic4cast2022](Main-image-web-08.png)
+
+Interested in understanding traffic around the globe in a novel way? [Join us](https://www.iarai.ac.at/traffic4cast/forums/) to help shape this year’s competition.
+
 
 ## Schedule
 * Beginning of July 2022: Traffic data available
