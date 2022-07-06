@@ -20,7 +20,7 @@ Interested in understanding traffic around the globe in a novel way? [Join us](h
 
 
 ## Schedule
-* Beginning of July 2022: Traffic data available
+* Mid July 2022: Traffic data available
 * 15th of October 2022: Submission to Traffic4cast 2022 leaderboard deadline
 * 21st of October 2022: Abstract submission deadline
 
