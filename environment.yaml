@@ -1,0 +1,41 @@
+name: t4c22
+channels:
+  # be aware of https://stackoverflow.com/questions/48547046/resetting-conda-channel-priorities#50671425
+  - pytorch
+  - defaults
+  - conda-forge
+dependencies:
+  - pip
+  - pytorch=1.11.0
+  - pip:
+      # install only pytorch through conda to minimize discrepancies (version conflict resolution) between the two dependency managers.
+      #====================================================
+      # (1) LIBRARY DEPENDENCIES
+      # Put additional libraries that are required for the framework into install-requirements.txt
+      # (i.e. not only for the experiments here), so we can install the framework as a library
+      #====================================================
+      - -r install-requirements.txt
+
+
+      #====================================================
+      # (2) LOCAL DEV + CI DEPENDENCIES
+      # put additional for dependencies required in ci here
+      #====================================================
+      - flake8
+      - flake8-docstrings==1.5.0
+      - mypy
+      - pytest
+      - pytest-cov
+      - pytest-benchmark
+      - pytest-mypy
+      - pytest-mock
+      - pre-commit
+      - vulture
+
+      #====================================================
+      # (3) BASELINES DEPENDENCIES
+      # put additional for running the baselines here
+      #====================================================
+      - notebook==6.4.12
+      - ipywidgets==7.7.1
+      - seaborn==0.11.2

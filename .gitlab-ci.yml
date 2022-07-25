@@ -1,0 +1,71 @@
+stages:
+  - tag-docker-image
+  - test
+
+unit-tests:
+  tags: [ docker ]
+  stage: test
+  image: $CI_REGISTRY_IMAGE:master
+  script:
+    - eval "$(/opt/conda/bin/conda shell.bash hook)"
+    - conda init bash
+    - source ~/.bashrc
+    - printenv
+    - export CONDA_ENVS_PATH=~
+    - conda env list
+    - conda env update -f environment.yaml --prefix /t4c22
+    - conda activate /t4c22
+    - python -c 'import torch_geometric'
+    - pre-commit run --all
+    - pytest --junitxml=report.xml -v -s --no-cov-on-fail --cov=.
+    - flake8 . --exit-zero --output-file=flake8.txt
+    - coverage xml
+    - python -m pip install -e .
+  artifacts:
+    when: always
+    reports:
+      junit: report.xml
+      cobertura: coverage.xml
+    paths:
+      - flake8.txt
+
+
+library-install-tests:
+  tags: [ docker ]
+  stage: test
+  image: continuumio/miniconda3
+  script:
+    - cat /etc/apt/sources.list
+    - sed --in-place --regexp-extended 's|http://|https://|g' /etc/apt/sources.list
+    - cat /etc/apt/sources.list
+    - apt update -qy && apt-get install -y make gcc g++ libstdc++6
+    - eval "$(/opt/conda/bin/conda shell.bash hook)"
+    - conda init bash
+    - source ~/.bashrc
+    - printenv
+    - export CONDA_ENVS_PATH=$PWD
+    - conda create -n t4c22_empty python=3.9 pip
+    - conda env list
+    - conda activate t4c22_empty
+    - python --version
+    - ls -al
+    - python -m pip install  .
+    - python -m pip install  .[torch-geometric] -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
+    - cd /tmp
+    - python -c 'import torch_geometric'
+    - python -c 'import torch; print(torch.cuda.is_available())'
+    - python -m t4c22.misc.check_torch_geometric_setup
+
+tag-docker-image:
+  # CAVEAT: this can be brittle - if the build fails and it's not fixed, the docker image will only be re-built on the next update...
+  only:
+    changes:
+      - Dockerfile
+  tags: [ shell ]
+  stage: tag-docker-image
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker pull $CI_REGISTRY_IMAGE:master || true
+    - docker build --cache-from $CI_REGISTRY_IMAGE:master --tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA .
+    - docker image tag $CI_REGISTRY_IMAGE:$CI_COMMIT_SHA $CI_REGISTRY_IMAGE:master
+    - docker image push $CI_REGISTRY_IMAGE:master
