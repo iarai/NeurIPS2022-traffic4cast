@@ -1,0 +1,70 @@
+default_language_version:
+  python: python3.9
+exclude: '.*.ipynb_checkpoints.*'
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: pretty-format-json
+        args: [ "--autofix", "--no-sort-keys"]
+      - id: mixed-line-ending
+        args: [ "--fix=lf" ]
+  -   repo: https://github.com/fsouza/autoflake8
+      rev: v0.3.2
+      hooks:
+        -   id: autoflake8
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v2.3.5
+    hooks:
+      - id: reorder-python-imports
+  - repo: https://github.com/myint/docformatter
+    rev: v1.3
+    hooks:
+      - id: docformatter
+
+  - repo: https://github.com/psf/black
+    # https://github.com/psf/black/issues/2964
+    rev: 22.3.0
+    hooks:
+      - id: black
+        args: [ --line-length, '160',
+        ]
+
+
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: 3.7.9
+    hooks:
+      - id: flake8
+        # https://dev.to/mmphego/why-you-need-to-stop-using-git-hooks-41
+        additional_dependencies: [
+            flake8-2020, # flake8 plugin which checks for misuse of `sys.version` or `sys.version_info`
+            flake8-absolute-import, # uses a simple check of the AST for each from x import y statement to flag relative imports.
+            flake8-blind-except, # A flake8 extension that checks for blind except: statements
+            flake8-builtins, # checks that there is no agent_id collision between your code and the Python builtin variables.
+            flake8-bugbear, # A plugin for flake8 finding likely bugs and design problems in your program.
+            flake8-builtins, # Check for python builtins being used as variables or parameters.
+            flake8-comprehensions, # It helps you write a better list/set/dict comprehensions.
+            flake8-copyright, # Adds copyright checks to flake8
+            flake8-deprecated, # Warns about deprecated method calls.
+            flake8-eradicate, # Flake8 plugin to find commented out code
+            flake8-license, # flake8 plugin which verifies that source files contain license, header at the top.
+            flake8-pytest, # pytest assert checker plugin for flake8
+            flake8-tabs, # Tab (or Spaces) indentation style checker for flake8
+            pep8-naming, # Check PEP-8 naming conventions, plugin for flake8
+        ]
+  - repo: https://github.com/jendrikseipp/vulture
+    rev: "v2.3"  # or any later Vulture version
+    hooks:
+      - id: vulture
+        name: vulture
+        language: python
+        entry: vulture
+        description: Find unused Python code.
+        types: [ python ]
+        args: [
+            "--min-confidence", "20",
+            "--exclude", "**/.ipynb_checkpoints/*.py,_archive/,exploration/,**/*_nb.py",
+            "."
+        ]
