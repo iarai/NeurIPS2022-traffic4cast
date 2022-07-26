@@ -191,7 +191,7 @@ We will provide format specification, code and examples to create submissions wh
 The following figure shows an overview of the data for the Traffic4cast 2022 Competition at NeurIPS and how it is used in the competition. For legal reasons, participants need to download speed data and generate edge labels from them locally. We provide the script to do that and it will take approx. 20 minutes. Node data can be downloaded from AWS from the public links below.
 <img src="./img/data_overview.svg">
 
-More details can be found in `data_peipeline/README.md`
+More details can be found in `data_pipeline/README.md`
 
 ### Download Links
 - [LONDON_2022.zip](https://developer.here.com/sample-data) from HERE (2.8 GB)
