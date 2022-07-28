@@ -1,4 +1,4 @@
-name: Python Package using Conda
+name: Linting and Tests
 
 on: [ push ]
 
@@ -21,12 +21,30 @@ jobs:
       - name: Install dependencies
         run: |
           conda env update --file environment.yaml --name base
+          python -m pip install -r install-extras-torch-geometric.txt -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
+          python --version
+          python -c 'import torch_geometric'
+          python check_torch_geometric_setup.py
       - name: Lint
         run: |
           pre-commit run --all
       - name: Test with pytest
         run: |
-          pytest
-      - name: Test library
-        run: |
-          python -m pip install -e .
+          pytest --junitxml=report.xml -v -s --no-cov-on-fail --cov=.
+          flake8 . --exit-zero --output-file=flake8.txt
+          coverage xml
+      - name: Archive junit test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: junit
+          path: report.xml
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: cobertura
+          path: coverage.xml
+      - name: Archive flake8 code style results
+        uses: actions/upload-artifact@v3
+        with:
+          name: flake8
+          path: flake8.txt
