@@ -1,5 +1,7 @@
 #  Traffic4cast 2022 Competition: from few public vehicle counters to entire city-wide traffic
 
+[![Tests](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/tests.yaml/badge.svg)](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/tests.yaml?branch=ci)
+
 ![traffic4cast2020](t4c20logo.png)
 
 * Predict congestion classes (red/yellow/green) and average speed.
