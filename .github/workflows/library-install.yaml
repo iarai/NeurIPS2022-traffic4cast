@@ -1,0 +1,32 @@
+name: Library Install
+
+on: [ push ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9.12
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+      - name: Install t4c22 library
+        run: |
+          python --version
+
+          python -m pip install  .
+          python -m pip install  .[torch-geometric] -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
+          cd /tmp
+          python -m pip list
+          python -c 'import torch_geometric'
+          python -c 'import torch; print(torch.cuda.is_available())'
+
+          python -m t4c22.misc.check_torch_geometric_setup

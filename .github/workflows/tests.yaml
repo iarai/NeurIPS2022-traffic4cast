@@ -22,9 +22,9 @@ jobs:
         run: |
           conda env update --file environment.yaml --name base
           python -m pip install -r install-extras-torch-geometric.txt -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
+          python -m pip list
           python --version
           python -c 'import torch_geometric'
-          python check_torch_geometric_setup.py
       - name: Lint
         run: |
           pre-commit run --all

@@ -1,6 +1,7 @@
 #  Traffic4cast 2022 Competition: from few public vehicle counters to entire city-wide traffic
 
 [![Tests](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/tests.yaml/badge.svg)](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/tests.yaml?branch=ci)
+[![Library Install](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/library-install.yaml/badge.svg)](https://github.com/iarai/NeurIPS2022-traffic4cast/actions/workflows/library-install.yaml?branch=ci)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ![traffic4cast2020](t4c20logo.png)
