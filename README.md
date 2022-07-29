@@ -6,6 +6,7 @@
 * Work with real world data from industrial-sized fleets and vehicle counters.
 * Apply Graph Learning to predict traffic dynamics on the road graph edges given sparse node data.
 
+![cc_animation.gif](exploration/cc_animation.gif)
 
 ## About
 [This repo](https://github.com/iarai/NeurIPS2022-traffic4cast) contains all information about the Traffic4cast 2022 NeurIPS competition for participants. It contains detailed information about the competition and data as well as code and [issue tracker](https://github.com/iarai/NeurIPS2022-traffic4cast/issues).
