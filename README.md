@@ -434,8 +434,8 @@ We use masked cross-entropy loss on congestion classes:
 
 
 
-$$\ell(\hat{y}, y) = \sum_{n=1}^N \frac{1}{\sum_{n=1}^N   w_{y_n} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}} l_n, \quad
-          l_n = - w_{y_n} \log \frac{\hat{y}\_{n,y_n}+\varepsilon}{\sum\_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}$$
+$$\ell(\hat{y}, y) = \Sigma_{n=1}^N \frac{1}{\Sigma_{n=1}^N   w_{y_n} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}} l_n, \quad
+          l_n = - w_{y_n} \log \frac{\hat{y}\_{n,y_n}+\varepsilon}{\Sigma\_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}$$
 
 
 where
