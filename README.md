@@ -456,7 +456,7 @@ In our setting,
   * 2 = yellow (slowed down)
   * 3 = red (congest)
 * $N$ goes over edges and timestamps
-* $w$ macro averaging: $w_c = \frac{N}{|C| \cdot \Sigma_{i=1}^N{\mathbb{1}\{y_i = c\}}}$ for $c \in C$ simply calculates the mean for each ground truth class, giving equal weight to each class ([scikit multiclas classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)). In problems where infrequent classes are nonetheless important, macro-averaging may be a means of highlighting their performance.  In our case, since we have more red than yellow than green in all cities and since we're interested in capturing congested situations well, we take this approach.
+* $w$ macro averaging: $w_c = \frac{N}{|C| \cdot \Sigma_{i=1}^N{   \mathbb{1} \\{y_i = c\\} }}$ for $c \in C$ simply calculates the mean for each ground truth class, giving equal weight to each class ([scikit multiclas classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)). In problems where infrequent classes are nonetheless important, macro-averaging may be a means of highlighting their performance.  In our case, since we have more red than yellow than green in all cities and since we're interested in capturing congested situations well, we take this approach.
 
 We provide
 * the weights $w$ for each city
