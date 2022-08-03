@@ -432,12 +432,12 @@ Arguments:
 ### Metric core competition (congestion classes)
 We use masked cross-entropy loss on congestion classes:
 
- 
 
-$$\ell(\hat{y}, y) = \sum_{n=1}^N \frac{1}{\Sigma_{n=1}^N   w_{y_n} \cdot 1\\{y_n \not= \text{ignore}\\\_\text{index}\\}} l_n, \quad
-          l_n = - w_{y_n} \log \frac{\hat{y}\_{n,y_n}+\varepsilon}{\Sigma\_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot 1\\{y_n \not= \text{ignore}\\\_\text{index}\\}$$
 
- 
+$$\ell(\hat{y}, y) = \sum_{n=1}^N \frac{1}{\sum_{n=1}^N   w_{y_n} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}} l_n, \quad
+          l_n = - w_{y_n} \log \frac{\hat{y}\_{n,y_n}+\varepsilon}{\sum\_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot \mathbb{1}\\{y_n \not= \text{ignore}\\\_\text{index}\\}$$
+
+
 where
 * $\hat{y} \in \mathbb{R}^{N \times C}$ is the input (probabilities, if logits are used, then replace $x_{n,c}$ and $y_n$ by $\exp(x_{n,c})$ and $\exp(y_{n})$ ),
 * $y \in \\{0,...,C-1\\}^N$ is the target,
@@ -445,7 +445,7 @@ where
 * $C \in \mathbb{N}$ is the number of classes,
 * $N \in \mathbb{N}$ is the number of samples,
 * $\varepsilon \in \mathbb{R}^+$ is small constant preventing overflow in $\log(0)$,
-* $\text{ignore}\\\_\text{index} \in C \cup \\{\bot\\} \in {}$ specifies a target value that is ignored or none ( $\bot$ ).
+* $\text{ignore}\\\_\text{index} \in C \cup \\{\bot\\}$ specifies a target value that is ignored or none ( $\bot$ ).
 
 Cross-entropy loss will penalize small predicted probabilities disproportionately.
 
@@ -456,7 +456,7 @@ In our setting,
   * 2 = yellow (slowed down)
   * 3 = red (congest)
 * $N$ goes over edges and timestamps
-* $w$ macro averaging: $w_c = \frac{N}{|C| \cdot \Sigma_{i=1}^N{\mathbb{1}\{y_i = c\}}}$ for $c \in C$ simply calculates the mean for each ground truth class, giving equal weight to each class ([scikit multiclas classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)). In problems where infrequent classes are nonetheless important, macro-averaging may be a means of highlighting their performance.  In our case, since we have more red than yellow than green in all cities and since we're interested in capturing congested situations well, we take this approach.
+* $w$ macro averaging: $w_c = \frac{N}{|C| \cdot \sum_{i=1}^N{\mathbb{1}\{y_i = c\}}}$ for $c \in C$ simply calculates the mean for each ground truth class, giving equal weight to each class ([scikit multiclas classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)). In problems where infrequent classes are nonetheless important, macro-averaging may be a means of highlighting their performance.  In our case, since we have more red than yellow than green in all cities and since we're interested in capturing congested situations well, we take this approach.
 
 We provide
 * the weights $w$ for each city
