@@ -434,8 +434,8 @@ We use masked cross-entropy loss on congestion classes:
 
  
 
-$$\ell(\hat{y}, y) = \sum_{n=1}^N \frac{1}{\Sigma_{n=1}^N   w_{y_n} \cdot \mathbb{1}\{y_n \not= \text{ignore}\\\_\text{index}\}} l_n, \quad
-          l_n = - w_{y_n} \log \frac{\hat{y}_{n,y_n}+\varepsilon}{\sum_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot \mathbb{1}\{y_n \not= \text{ignore}\\\_\text{index}\}$$
+$$\ell(\hat{y}, y) = \sum_{n=1}^N \frac{1}{\Sigma_{n=1}^N   w_{y_n} \cdot 1\\{y_n \not= \text{ignore}\\\_\text{index}\\}} l_n, \quad
+          l_n = - w_{y_n} \log \frac{\hat{y}\_{n,y_n}+\varepsilon}{\Sigma\_{c=0}^{C-1} \hat{y}_{n,c}+\varepsilon} \cdot 1\\{y_n \not= \text{ignore}\\\_\text{index}\\}$$
 
  
 where
@@ -445,7 +445,7 @@ where
 * $C \in \mathbb{N}$ is the number of classes,
 * $N \in \mathbb{N}$ is the number of samples,
 * $\varepsilon \in \mathbb{R}^+$ is small constant preventing overflow in $\log(0)$,
-* $\text{ignore}\\\_\text{index} \in C \cup \{\bot\}$ specifies a target value that is ignored or none ( $\bot$ ).
+* $\text{ignore}\\\_\text{index} \in C \cup \\{\bot\\} \in {}$ specifies a target value that is ignored or none ( $\bot$ ).
 
 Cross-entropy loss will penalize small predicted probabilities disproportionately.
 
