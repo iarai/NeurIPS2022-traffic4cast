@@ -234,23 +234,23 @@ After unzipping, you should have received the following merged folder structure
 │       └── road_graph_nodes.parquet
 ├── movie
 │   ├── london
-|   │   ├── 2019-07-01_LONDON_8ch.h5.parquet
+|   │   ├── 2019-07-01_london_8ch.h5.parquet
 |   │      ...
 │   ├── madrid
-|   │   ├── 2019-07-01_MADRID_8ch.h5.parquet
+|   │   ├── 2019-07-01_madrid_8ch.h5.parquet
 |   │      ...
 │   └── melbourne
-|   │   ├── 2019-07-01_MELBOURNE_8ch.h5.parquet
+|   │   ├── 2019-07-01_melbourne_8ch.h5.parquet
 |   │      ...
 ├── speed_classes
 │   ├── london
-|   │   ├── speed_classes_2019-07-01_.parquet
+|   │   ├── speed_classes_2019-07-01.parquet
 |   │      ...
 │   ├── madrid
-|   │   ├── speed_classes_2019-07-01_.parquet
+|   │   ├── speed_classes_2019-07-01.parquet
 |   │      ...
 │   └── melbourne
-|   │   ├── speed_classes_2019-07-01_.parquet
+|   │   ├── speed_classes_2019-07-01.parquet
 |   │      ...
 ├── submissions
 │   ├── london
