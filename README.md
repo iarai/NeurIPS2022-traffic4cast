@@ -19,6 +19,56 @@
 * 21st of October 2022: Abstract submission deadline
 * 5th November 2022: announcement of the winners
 
+## TL;DR
+
+### Download Links
+- [LONDON_2022.zip](https://developer.here.com/sample-data) from HERE (2.8 GB)
+- [MADRID_2022.zip](https://developer.here.com/sample-data) from HERE (4.0 GB)
+- [MELBOURNE_2022.zip](https://developer.here.com/sample-data) from HERE (0.9 GB)
+- [T4C_INPUTS_2022.zip](http://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
+- [T4C_TESTS_CORE_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available August 19, 2022
+- [T4C_TESTS_EXTENDED_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available September 2, 2022
+
+For more details, see [Folder Structure](#folder-structure) below.
+
+### Prepare environment
+
+
+```bash
+conda env update -f environment.yaml
+conda activate t4c22
+
+# Installing the torch geometric extras is optional, required only if using `torch_geometric`
+# install-extras is not passed to pip from environment yaml, therefore add as post-step (https://github.com/conda/conda/issues/6805)
+# replace with your CUDA version (cpu, ...), see https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html
+CUDA="cu113"
+python -m pip install -r install-extras-torch-geometric.txt -f https://data.pyg.org/whl/torch-1.11.0+${CUDA}.html
+
+python t4c22/misc/check_torch_geometric_setup.py
+```
+
+
+### Generate labels
+After downloading the data (see [Download Links](#download-links)), run
+```bash
+prepare_training_data_cc.py -d <data folder with unzipped downloads>
+```
+
+
+### Start jupyter notebook and explore
+
+```bash
+cd <root of the repo clone>
+export PYTHONPATH=<root of the repo clone>
+
+jupyter notebook
+Jupyter Notebook 6.4.12 is running at:
+http://localhost:8888/?token=xxx
+ or http://127.0.0.1:8888/?token=xxx
+```
+
+Then open the above link in the browser and have a look at the data exploration and baseline notebooks
+
 
 ## Competition Description
 Our Traffic4cast competition series at NeurIPS has contributed both methodological and practical insights to advance the application of AI to forecasting traffic and other spatial processes. Now, going beyond the Traffic4cast challenges at NeurIPS 2019, 2020, and 2021, this year we will explore models that have the ability to **generalize loosely related temporal vertex data on just a few nodes** to **predict dynamic future traffic states on the edges of the entire road graph**. Specifically, in our core challenge we invite participants to predict for three cities the **congestion classes** known from the red, yellow, or green colouring of roads on a common traffic map for the entire road graph 15min into the future. We provide **car count data from spatially sparse vehicle counters** in these three cities in 15min aggregated time bins for one hour prior to the prediction time slot. For our extended challenge participants are asked to predict the **actual average speeds** on each road segment in the graph 15min into the future.
@@ -124,45 +174,7 @@ For both core and extended competitions each:
 * Special prizes for creative and innovative solutions tba
 
 
-## TL;DR
 
-### Prepare environment
-
-
-```bash
-conda env update -f environment.yaml
-conda activate t4c22
-
-# Installing the torch geometric extras is optional, required only if using `torch_geometric`
-# install-extras is not passed to pip from environment yaml, therefore add as post-step (https://github.com/conda/conda/issues/6805)
-# replace with your CUDA version (cpu, ...), see https://pytorch-geometric.readthedocs.io/en/latest/notes/installation.html
-CUDA="cu113"
-python -m pip install -r install-extras-torch-geometric.txt -f https://data.pyg.org/whl/torch-1.11.0+${CUDA}.html
-
-python t4c22/misc/check_torch_geometric_setup.py
-```
-
-
-### Download and generate labels
-After downloading the data (see [Download Links](#download-links) below), run
-```bash
-prepare_training_data_cc.py -d <data folder with unzipped downloads>
-```
-
-
-### Start jupyter notebook and explore
-
-```bash
-cd <root of the repo clone>
-export PYTHONPATH=<root of the repo clone>
-
-jupyter notebook
-Jupyter Notebook 6.4.12 is running at:
-http://localhost:8888/?token=xxx
- or http://127.0.0.1:8888/?token=xxx
-```
-
-Then open the above link in the browser and have a look at the data exploration and baseline notebooks
 
 
 ## Submission
@@ -187,6 +199,7 @@ We will provide format specification, code and examples to create submissions wh
 ```
 
 ## Data
+See [Download Links](#download-links) above.
 
 ### Overview
 The following figure shows an overview of the data for the Traffic4cast 2022 Competition at NeurIPS and how it is used in the competition. For legal reasons, participants need to download speed data and generate edge labels from them locally. We provide the script to do that and it will take approx. 20 minutes. Node data can be downloaded from AWS from the public links below.
@@ -194,15 +207,9 @@ The following figure shows an overview of the data for the Traffic4cast 2022 Com
 
 More details can be found in `data_pipeline/README.md`
 
-### Download Links
-- [LONDON_2022.zip](https://developer.here.com/sample-data) from HERE (2.8 GB)
-- [MADRID_2022.zip](https://developer.here.com/sample-data) from HERE (4.0 GB)
-- [MELBOURNE_2022.zip](https://developer.here.com/sample-data) from HERE (0.9 GB)
-- [T4C_INPUTS_2022.zip](http://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
-- [T4C_TESTS_CORE_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available August 19, 2022
-- [T4C_TESTS_EXTENDED_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available September 2, 2022
 
 ### Folder Structure
+
 Unzip:
 ```bash
 BASEDIR=data
@@ -234,13 +241,13 @@ After unzipping, you should have received the following merged folder structure
 │       └── road_graph_nodes.parquet
 ├── movie
 │   ├── london
-|   │   ├── 2019-07-01_london_8ch.h5.parquet
+|   │   ├── 2019-07-01_london_8ch.h5
 |   │      ...
 │   ├── madrid
-|   │   ├── 2019-07-01_madrid_8ch.h5.parquet
+|   │   ├── 2019-07-01_madrid_8ch.h5
 |   │      ...
 │   └── melbourne
-|   │   ├── 2019-07-01_melbourne_8ch.h5.parquet
+|   │   ├── 2019-07-01_melbourne_8ch.h5
 |   │      ...
 ├── speed_classes
 │   ├── london
