@@ -40,7 +40,11 @@ from typing import Union
 import h5py
 import numpy as np
 
-# -
+
+NUM_SLOTS_NON_AGGREGATED = 288
+NUM_SLOTS_AGGREGATED = 96
+NUM_ROWS = 495
+NUM_COLUMNS = 436
 
 
 def load_h5_file(file_path: Union[str, Path]) -> np.ndarray:
@@ -89,18 +93,19 @@ def generate_15min_aggregates(data_folder: Path, resume=False):
 
         naancount = np.count_nonzero(np.isnan(data[..., [1, 3, 5, 7]]))
         assert naancount > 0, naancount
-        assert naancount < 288 * 495 * 436 * 4 - 9999, (naancount, 288 * 495 * 436 * 4)
+
+        assert naancount < NUM_SLOTS_NON_AGGREGATED * NUM_ROWS * NUM_COLUMNS * 4 - 9999, (naancount, NUM_SLOTS_NON_AGGREGATED * NUM_ROWS * NUM_COLUMNS * 4)
         assert np.count_nonzero(np.isnan(data[..., [0, 2, 4, 6]])) == 0
 
-        data_resized = data.reshape(96, 3, 495, 436, 8)
-        data_aggregated = np.zeros(shape=(96, 495, 436, 8))
+        data_resized = data.reshape(NUM_SLOTS_AGGREGATED, 3, NUM_ROWS, NUM_COLUMNS, 8)
+        data_aggregated = np.zeros(shape=(NUM_SLOTS_AGGREGATED, NUM_ROWS, NUM_COLUMNS, 8))
 
         with warnings.catch_warnings():  # there can be empty slices, ignoring them e.g. at night
             warnings.simplefilter("ignore", category=RuntimeWarning)
             data_aggregated[..., [0, 2, 4, 6]] = np.nansum(data_resized[..., [0, 2, 4, 6]], axis=1)
             data_aggregated[..., [1, 3, 5, 7]] = np.nanmean(data_resized[..., [1, 3, 5, 7]], axis=1)
 
-        assert data_aggregated.shape == (96, 495, 436, 8), (data_aggregated.shape, input_fn)
+        assert data_aggregated.shape == (NUM_SLOTS_AGGREGATED, NUM_ROWS, NUM_COLUMNS, 8), (data_aggregated.shape, input_fn)
         assert data_aggregated.dtype == np.float64, data_aggregated.dtype
         write_data_to_h5(data=data_aggregated, filename=output_fn, dtype=np.float64)
     print("... finished aggregating.")
