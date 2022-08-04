@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 
+import t4c22
 from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
 from t4c22.misc.movie_aggregation import load_h5_file
 from t4c22.misc.movie_aggregation import main
@@ -24,6 +25,12 @@ def test_movie_aggregation():
     date = "1970-01-01"
     with tempfile.TemporaryDirectory() as tmp_dir:
         tmp_dir = Path(tmp_dir)
+
+        t4c22.misc.movie_aggregation.NUM_SLOTS_NON_AGGREGATED = t4c22.misc.dummy_competition_setup_for_testing.NUM_SLOTS_NON_AGGREGATED
+        t4c22.misc.movie_aggregation.NUM_SLOTS_AGGREGATED = t4c22.misc.dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED
+        t4c22.misc.movie_aggregation.NUM_ROWS = t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS
+        t4c22.misc.movie_aggregation.NUM_COLUMNS = t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS
+
         create_dummy_competition_setup(basedir=tmp_dir, city="london", skip_train_labels=True, date=date, skip_movie=False)
         assert (tmp_dir / "movie" / "london" / f"{date}_london_8ch.h5").exists()
 
@@ -34,5 +41,10 @@ def test_movie_aggregation():
 
         assert london_8ch_15_h5.exists()
         london_8ch_15_data = load_h5_file(london_8ch_15_h5)
-        assert london_8ch_15_data.shape == (96, 495, 436, 8), london_8ch_15_data.shape
+        assert london_8ch_15_data.shape == (
+            t4c22.misc.dummy_competition_setup_for_testing.NUM_SLOTS_AGGREGATED,
+            t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS,
+            t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS,
+            8,
+        ), london_8ch_15_data.shape
         assert london_8ch_15_data.dtype == np.float64, london_8ch_15_data.dtype

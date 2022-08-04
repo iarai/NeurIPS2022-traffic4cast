@@ -1,0 +1,50 @@
+name: Linting and Tests
+
+on: [ push ]
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 5
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.9.12
+        uses: actions/setup-python@v3
+        with:
+          python-version: 3.9.12
+      - name: Add conda to system path
+        run: |
+          # $CONDA is an environment variable pointing to the root of the miniconda directory
+          echo $CONDA/bin >> $GITHUB_PATH
+      - name: Install dependencies
+        run: |
+          conda env update --file environment.yaml --name base
+          python -m pip install -r install-extras-torch-geometric.txt -f https://data.pyg.org/whl/torch-1.11.0+cpu.html
+          python -m pip list
+          python --version
+          python -c 'import torch_geometric'
+      - name: Lint
+        run: |
+          pre-commit run --all
+      - name: Test with pytest
+        run: |
+          pytest --junitxml=report.xml -v -s --no-cov-on-fail --cov=.
+          flake8 . --exit-zero --output-file=flake8.txt
+          coverage xml
+      - name: Archive junit test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: junit
+          path: report.xml
+      - name: Archive code coverage results
+        uses: actions/upload-artifact@v3
+        with:
+          name: cobertura
+          path: coverage.xml
+      - name: Archive flake8 code style results
+        uses: actions/upload-artifact@v3
+        with:
+          name: flake8
+          path: flake8.txt

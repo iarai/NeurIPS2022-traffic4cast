@@ -16,7 +16,10 @@ import pandas
 from t4c22.misc.movie_aggregation import write_data_to_h5
 from t4c22.misc.parquet_helpers import write_df_to_parquet
 
-# -
+NUM_SLOTS_NON_AGGREGATED = 12
+NUM_SLOTS_AGGREGATED = 4
+NUM_ROWS = 19
+NUM_COLUMNS = 17
 
 
 def create_dummy_competition_setup(
@@ -192,4 +195,4 @@ def create_dummy_competition_setup(
     if not skip_movie:
         movie_h5 = basedir / "movie" / city / f"{date}_{city}_8ch.h5"
         movie_h5.parent.mkdir(exist_ok=True, parents=True)
-        write_data_to_h5(filename=movie_h5, data=np.random.randint(256, size=(288, 495, 436, 8), dtype=np.uint8))
+        write_data_to_h5(filename=movie_h5, data=np.random.randint(256, size=(NUM_SLOTS_NON_AGGREGATED, NUM_ROWS, NUM_COLUMNS, 8), dtype=np.uint8))
