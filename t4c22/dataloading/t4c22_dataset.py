@@ -87,7 +87,7 @@ class T4c22Dataset(torch.utils.data.Dataset):
             return min(self.limit, len(self.day_t))
         return len(self.day_t)
 
-    def __getitem__(self, idx: int) -> torch.Tensor:
+    def __getitem__(self, idx: int) -> torch.Tensor:  # noqa:C901
         if idx > self.__len__():
             raise IndexError("Index out of bounds")
 
@@ -125,5 +125,9 @@ class T4c22Dataset(torch.utils.data.Dataset):
 
         # x.size(): (num_nodes, 4) - loop counter data, a lot of NaNs!
         # y.size(): (num_edges, 1) - congestion classification data, contains NaNs.
+        # edge_attr: (num_edges, len(edge_attributes)) - edge attributes, optionally
+        if self.torch_road_graph_mapping.edge_attributes is None:
+            return x, y
 
-        return x, y
+        else:
+            return x, y, self.torch_road_graph_mapping.edge_attr

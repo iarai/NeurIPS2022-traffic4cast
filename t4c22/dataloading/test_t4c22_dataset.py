@@ -17,12 +17,23 @@ import tqdm
 
 from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.dataloading.t4c22_dataset_geometric import T4c22GeometricDataset
+from t4c22.misc.add_position_to_edges import add_node_attributes_to_edges_parquet
 from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
 from t4c22.misc.parquet_helpers import load_df_from_parquet
 
 
-@pytest.mark.parametrize("dataset_class,extractor", [(T4c22GeometricDataset, lambda data: (data.x, data.y)), (T4c22Dataset, lambda data: data)])
-def test_T4c22Dataset(dataset_class, extractor):
+@pytest.mark.parametrize(
+    "dataset_class,extractor,edge_attributes",
+    [
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"]),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"]),
+        (T4c22Dataset, lambda data: data, None),
+        (T4c22Dataset, lambda data: data, ["importance"]),
+        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"]),
+    ],
+)
+def test_T4c22Dataset(dataset_class, extractor, edge_attributes):  # noqa:C901
     city = "gotham"
     date = "1970-01-01"
     num_test_slots = 22
@@ -32,10 +43,15 @@ def test_T4c22Dataset(dataset_class, extractor):
             cachedir = Path(cachedir)
 
             create_dummy_competition_setup(basedir=basedir, city=city, date=date, num_test_slots=num_test_slots)
+            if edge_attributes is not None and "x_u" in edge_attributes:
+                add_node_attributes_to_edges_parquet(basedir=basedir, city=city)
 
-            ds = dataset_class(root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=["importance"])
+            ds = dataset_class(root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=edge_attributes)
             for idx, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
-                x, y = extractor(data)
+                if edge_attributes is None:
+                    x, y = extractor(data)
+                else:
+                    x, y, edge_attr = extractor(data)
                 day, t = ds.day_t[idx]
 
                 # --------------------------------------------
@@ -81,7 +97,9 @@ def test_T4c22Dataset(dataset_class, extractor):
                 # --------------------------------------------
                 #  edge_attr
                 # --------------------------------------------
-                # TODO test edge_attr
+                if edge_attributes is not None:
+                    expected_size = (len(ds.torch_road_graph_mapping.edges), len(edge_attributes))
+                    assert edge_attr.size() == expected_size, (expected_size, edge_attr.size())
 
             ds = dataset_class(root=basedir, city=city, split="test", cachedir=cachedir, day_t_filter=None)
             assert len(ds) == num_test_slots
