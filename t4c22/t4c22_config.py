@@ -74,7 +74,8 @@ def day_t_filter(day: str, t: int, day_whitelist=None, t_whitelist=None, weekday
 DAY_T_FILTER = Callable[[str, int], bool]
 DF_FILTER = Callable[[pd.DataFrame], pd.DataFrame]
 
-day_t_filter_weekdays_daytime_only: DAY_T_FILTER = partial(day_t_filter, t_whitelist=set(range(6 * 4, 22 * 4)), weekday_whitelist=set(range(6)))
+# 6am-10pm all days of the week:
+day_t_filter_weekdays_daytime_only: DAY_T_FILTER = partial(day_t_filter, t_whitelist=set(range(6 * 4, 22 * 4)), weekday_whitelist=set(range(7)))
 
 
 def day_t_filter_to_df_filter(df: pd.DataFrame, filter: DAY_T_FILTER, tmp_column_name="_included") -> pd.DataFrame:
@@ -96,6 +97,7 @@ def day_t_filter_to_df_filter(df: pd.DataFrame, filter: DAY_T_FILTER, tmp_column
     return df
 
 
+# 6am-10pm all days of the week:
 df_filter_weekdays_daytime_only: DF_FILTER = partial(day_t_filter_to_df_filter, filter=day_t_filter_weekdays_daytime_only)
 
 
