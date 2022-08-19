@@ -78,4 +78,4 @@ def plot_segment_classifications_simple(  # noqa:C901
     ax.set_ylim([0, 1])
     axs[3].set_title("proba_pred")
     axs[3].grid()
-    return fig, ax
+    return fig, axs

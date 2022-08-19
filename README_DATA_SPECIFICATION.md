@@ -11,13 +11,13 @@
 
 ## `train/london/labels/cc_labels_2019-07-01.parquet`
 
-| Attribute     | Example      | Data Type | Description                                                                                                                       |
-|---------------|--------------|-----------|-----------------------------------------------------------------------------------------------------------------------------------|
-| u | 78112 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                                                                    |
-| v | 25508583 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                                                                    |
+| Attribute     | Example      | Data Type | Description                                                                                                                        |
+|---------------|--------------|-----------|------------------------------------------------------------------------------------------------------------------------------------|
+| u | 78112 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                                                                     |
+| v | 25508583 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                                                                     |
 | day | 2019-07-01 | string | formatted string `%Y-%m-%d` see [format codes](https://docs.python.org/3/library/datetime.html#strftime-and-strptime-format-codes) |
-| t | 9 | int64 | 15-minute time slot in the range [0,...,96)                                                                                       |
-| cc | 2 | int64 | range [1,..,4], 1=green/uncongested, 2=yellow/slowed-down, 3=red/congested                                        |
+| t | 9 | int64 | 15-minute time slot in the range [0,...,96)                                                                                        |
+| cc | 2 | int64 | range [0,..,3], 0=undefined, 1=green/uncongested, 2=yellow/slowed-down, 3=red/congested                                            |
 
 ## `road_graph/london/cell_mapping.parquet`
 
@@ -99,19 +99,23 @@
 | 6 | volume NE |
 | 7 | speed NE |
 
-## `test/london/input/counters_test.parquet`
-
-**SUBJECT TO CHANGE, WILL BE FINALIZED WHEN LEADERBOARD OPENS**
+## `test/london/input/counters_test.parquet` (core competition: congestion classes (cc))
 
 | Attribute     | Example      | Data Type | Description                                                    |
 |---------------|--------------|-----------|----------------------------------------------------------------|
 | node_id | 101818 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet` |
 | volumes_1h | [290. 284. 313. 311.] | list<item: double> | the counts for the 4 15-minute intervals                       |
-| test_idx | 0 | int64 | The index for the test in range [0,...,200) for each city.     |
+| test_idx | 0 | int64 | The index for the test in range [0,...,100) for each city.     |
 
-## `submission/london/cc_labels_test.parquet`
 
-**SUBJECT TO CHANGE, WILL BE FINALIZED WHEN LEADERBOARD OPENS**
+## `submission/submission_core.zip/london/cc_labels_test.parquet`
+
+The submission zip for the core competition must have the following file structures
+```
+london/labels/cc_labels_test.parquet
+madrid/labels/cc_labels_test.parquet
+melbourne/labels/cc_labels_test.parquet
+```
 
 | Attribute | Example | Data Type | Description                                                    |
 |---------------|--------------|-----------|----------------------------------------------------------------|
@@ -120,16 +124,16 @@
 | logit_green | -3.551521 | double | the logit for congestion class 1=green                         |
 | logit_yellow | -2.632999 | double | the logit for congestion class 2=yellow                        |
 | logit_red | -3.558682 | double | the logit for congestion class 3=red                           |
-| test_idx | 0 | int64 | The index for the test in range [0,...,200) for each city.     |
-|
+| test_idx | 0 | int64 | The index for the test in range [0,...,100) for each city.     |
+
 
 ## `withheld/golden/london/labels/cc_labels_test.parquet`
 
-**SUBJECT TO CHANGE, WILL BE FINALIZED WHEN LEADERBOARD OPENS**
+Just for illustrative purposes on how the evaluation is performed. Participants do not have access to the withheld data.
 
-| Attribute     | Example      | Data Type | Description                                                                              |
-|---------------|--------------|-----------|------------------------------------------------------------------------------------------|
-| u | 99936 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                           |
-| v | 2146383887 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                           |
-| cc | 2 | int64 | range [1,..,4], 1=green/uncongested, 2=yellow/slowed-down, 3=red/congested |
-| test_idx | 0 | int64 | The index for the test in range [0,...,200) for each city.     |
+| Attribute     | Example      | Data Type | Description                                                                             |
+|---------------|--------------|-----------|-----------------------------------------------------------------------------------------|
+| u | 99936 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                          |
+| v | 2146383887 | int64 | OSM ID, foreign key to `node_id` in `road_graph_nodes.parquet`                          |
+| cc | 2 | int64 | range [0,..,3], 0=undefined, 1=green/uncongested, 2=yellow/slowed-down, 3=red/congested |
+| test_idx | 0 | int64 | The index for the test in range [0,...,100) for each city.                              |
