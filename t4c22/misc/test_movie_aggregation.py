@@ -31,7 +31,7 @@ def test_movie_aggregation():
         t4c22.misc.movie_aggregation.NUM_ROWS = t4c22.misc.dummy_competition_setup_for_testing.NUM_ROWS
         t4c22.misc.movie_aggregation.NUM_COLUMNS = t4c22.misc.dummy_competition_setup_for_testing.NUM_COLUMNS
 
-        create_dummy_competition_setup(basedir=tmp_dir, city="london", skip_train_labels=True, date=date, skip_movie=False)
+        create_dummy_competition_setup(basedir=tmp_dir, city="london", skip_train_labels=True, train_dates=[date], skip_movie=False)
         assert (tmp_dir / "movie" / "london" / f"{date}_london_8ch.h5").exists()
 
         london_8ch_15_h5 = tmp_dir / "movie_15min" / "london" / f"{date}_london_8ch_15min.h5"

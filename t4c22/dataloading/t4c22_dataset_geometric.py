@@ -43,6 +43,11 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
 
         Missing values in input or labels are represented as nans, use `torch.nan_to_num`.
 
+        CC labels are shift left by one in tensor as model outputs only green,yellow,red but not unclassified and allows for direct use in `torch.nn.CrossEntropy`
+            # 0 = green
+            # 1 = yellow
+            # 2 = red
+
         Parameters
         ----------
         root: basedir for data
@@ -114,7 +119,9 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
         x = self.torch_road_graph_mapping.load_inputs_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
 
         # y: congestion classes on edges at +60'
-        y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+        y = None
+        if self.split != "test":
+            y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
         # https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html:
         #         x (Tensor, optional) – Node feature matrix with shape [num_nodes, num_node_features]. (default: None)
         #         edge_index (LongTensor, optional) – Graph connectivity in COO format with shape [2, num_edges]. (default: None)

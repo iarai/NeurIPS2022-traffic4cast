@@ -31,7 +31,7 @@
 - [MADRID_2022.zip](https://developer.here.com/sample-data) from HERE (4.0 GB)
 - [MELBOURNE_2022.zip](https://developer.here.com/sample-data) from HERE (0.9 GB)
 - [T4C_INPUTS_2022.zip](http://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
-- [T4C_TESTS_CORE_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available August 19, 2022
+- Tests for the core competition are contained in `T4C_INPUTS_2022.zip` above.
 - [T4C_TESTS_EXTENDED_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available September 2, 2022
 
 For more details, see [Folder Structure](#folder-structure) below.
@@ -480,21 +480,21 @@ References: [torch.nn.CrossEntropyLoss](https://pytorch.org/docs/stable/generate
 
 ## Test set
 
-### Test set core competition (congestion classification)
-We will restrict evaluation to a subset
-* Mon-Fri 6-22
+### Test set core competition (congestion classification `cc`)
+We will restrict evaluation to a subset 6am-10pm (including weekends).
 However, all data can be used for training.
 
 We will provide the code we use for evaluation and code to generate own validation sets  when the leaderboards open.
 
+### Test set extended competition (super-segment average speed `eta`)
+Forthcoming
 
 ## Data loaders
 We provide a plain torch and torch geometric data loader, see `t4c22.dataloading` and the working examples under `exploration`.
 
 
-## Baselines
+## Baselines (forthcoming)
 The task can be tackled in many ways, from GNN to attention-based to working on the grid (movies).
-We will provide baselines by the time the leaderboard opens.
 
 In the mean-time, see the examples under `exploration` with working data loading.
 

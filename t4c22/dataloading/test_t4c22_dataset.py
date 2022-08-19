@@ -9,6 +9,7 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 import tempfile
+from functools import partial
 from pathlib import Path
 
 import pytest
@@ -17,23 +18,31 @@ import tqdm
 
 from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.dataloading.t4c22_dataset_geometric import T4c22GeometricDataset
+from t4c22.evaluation.create_submission import inference_cc_city_plain_torch_to_pandas
+from t4c22.evaluation.test_create_submission import DummyRandomNN
 from t4c22.misc.add_position_to_edges import add_node_attributes_to_edges_parquet
 from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
 from t4c22.misc.parquet_helpers import load_df_from_parquet
 
 
 @pytest.mark.parametrize(
-    "dataset_class,extractor,edge_attributes",
+    "dataset_class,extractor,edge_attributes,use_cachedir",
     [
-        (T4c22GeometricDataset, lambda data: (data.x, data.y), None),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"]),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"]),
-        (T4c22Dataset, lambda data: data, None),
-        (T4c22Dataset, lambda data: data, ["importance"]),
-        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"]),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, True),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, False),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], True),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], False),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], True),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], False),
+        (T4c22Dataset, lambda data: data, None, True),
+        (T4c22Dataset, lambda data: data, None, False),
+        (T4c22Dataset, lambda data: data, ["importance"], True),
+        (T4c22Dataset, lambda data: data, ["importance"], False),
+        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"], True),
+        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"], False),
     ],
 )
-def test_T4c22Dataset(dataset_class, extractor, edge_attributes):  # noqa:C901
+def test_T4c22Dataset(dataset_class, extractor, edge_attributes, use_cachedir):  # noqa:C901
     city = "gotham"
     date = "1970-01-01"
     num_test_slots = 22
@@ -41,8 +50,10 @@ def test_T4c22Dataset(dataset_class, extractor, edge_attributes):  # noqa:C901
         with tempfile.TemporaryDirectory() as cachedir:
             basedir = Path(basedir)
             cachedir = Path(cachedir)
+            if not use_cachedir:
+                cachedir = None
 
-            create_dummy_competition_setup(basedir=basedir, city=city, date=date, num_test_slots=num_test_slots)
+            create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots)
             if edge_attributes is not None and "x_u" in edge_attributes:
                 add_node_attributes_to_edges_parquet(basedir=basedir, city=city)
 
@@ -107,8 +118,48 @@ def test_T4c22Dataset(dataset_class, extractor, edge_attributes):  # noqa:C901
                 _ = extractor(data)
 
 
-def test_torch_to_df_to_torch():
-    # TODO we want to be sure evaluation is the same if evaluation directly on the catted tensors or after writing to parquet and evaluation the submission!
-    # TODO test torch -> pandas -> torch gives the same
-    # TODO test torch -> crossentropy is the same as torch -> pandas -> toch crossentropy
-    pass
+def test_create_submission_cc_city_plain_torch():
+    """Test torch -> pandas -> torch works correctly, i.e. going through pandas
+    does not change."""
+    # TODO same with geometric?
+    city = "gotham"
+    date = "1970-01-01"
+    num_test_slots = 22
+    with tempfile.TemporaryDirectory() as basedir:
+        basedir = Path(basedir)
+
+        create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[], test_dates=[date], num_test_slots=num_test_slots)
+
+        ds = T4c22Dataset(root=basedir, city=city, split="test")
+
+        seed = 666
+
+        model = DummyRandomNN(num_edges=len(ds.torch_road_graph_mapping.edges))
+
+        predict, y_hats_torch = _inference_torch(ds, model, seed)
+
+        torch.manual_seed(seed)
+        df = inference_cc_city_plain_torch_to_pandas(test_dataset=ds, predict=predict)
+        y_hats_torch_pandas_torch = torch.from_numpy(df[["logit_green", "logit_yellow", "logit_red"]].to_numpy())
+
+        assert torch.allclose(y_hats_torch_pandas_torch, y_hats_torch)
+
+
+def _inference_torch(ds, model, seed=None):
+    def predict(data, device, model):
+        x, y = data
+        x = x.to(device)
+        return model(x)
+
+    device = f"cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device)
+    predict = partial(predict, device=device, model=model)
+    if seed is not None:
+        torch.manual_seed(seed)
+    y_hats_torch = []
+    for _, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
+        y_hat = predict(data)
+        y_hats_torch.append(y_hat)
+        x, y = data
+    y_hats_torch = torch.cat(y_hats_torch)
+    return predict, y_hats_torch

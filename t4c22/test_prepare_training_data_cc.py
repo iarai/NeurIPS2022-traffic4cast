@@ -23,15 +23,15 @@ def test_prepare_training_data_cc():
             basedir=tmp_dir,
             city="london",
             skip_train_labels=True,
-            date=date,
+            train_dates=[date],
         )
         create_dummy_competition_setup(
             basedir=tmp_dir,
             city="madrid",
             skip_train_labels=True,
-            date=date,
+            train_dates=[date],
         )
-        create_dummy_competition_setup(basedir=tmp_dir, city="melbourne", skip_train_labels=True, date=date)
+        create_dummy_competition_setup(basedir=tmp_dir, city="melbourne", skip_train_labels=True, train_dates=[date])
         assert not (tmp_dir / "train" / "london" / "labels" / "cc_labels.parquet").exists()
         assert not (tmp_dir / "train" / "madrid" / "labels" / "cc_labels.parquet").exists()
         assert not (tmp_dir / "train" / "melbourne" / "labels" / "cc_labels.parquet").exists()

@@ -29,7 +29,7 @@ class T4c22Dataset(torch.utils.data.Dataset):
         city: str,
         edge_attributes=None,
         split: str = "train",
-        cachedir=Optional[Path],
+        cachedir: Optional[Path] = None,
         limit: int = None,
         day_t_filter=day_t_filter_weekdays_daytime_only,
     ):
@@ -41,6 +41,11 @@ class T4c22Dataset(torch.utils.data.Dataset):
         overlapping sampling, but discarding samples going over midnight.
 
         Missing values in input or labels are represented as nans, use `torch.nan_to_num`.
+        CC labels are shift left by one in tensor as model outputs only green,yellow,red but not unclassified and allows for direct use in `torch.nn.CrossEntropy`
+            # 0 = green
+            # 1 = yellow
+            # 2 = red
+
 
         Parameters
         ----------
@@ -109,6 +114,8 @@ class T4c22Dataset(torch.utils.data.Dataset):
             if self.cachedir is not None:
                 self.cachedir.mkdir(exist_ok=True, parents=True)
                 torch.save(x, cache_file)
+        if self.split == "test":
+            return x, None
 
         # y: congestion classes on edges at +60'
         y = None
@@ -121,7 +128,7 @@ class T4c22Dataset(torch.utils.data.Dataset):
 
             if self.cachedir is not None:
                 self.cachedir.mkdir(exist_ok=True, parents=True)
-            torch.save(y, cache_file)
+                torch.save(y, cache_file)
 
         # x.size(): (num_nodes, 4) - loop counter data, a lot of NaNs!
         # y.size(): (num_edges, 1) - congestion classification data, contains NaNs.
