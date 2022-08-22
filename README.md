@@ -504,15 +504,20 @@ In the mean-time, see the examples under `exploration` with working data loading
 Please cite this repo along with the papers of the previous competitions:
 
 ```
-@misc{https://doi.org/10.48550/arxiv.2203.17070,
-  doi = {10.48550/ARXIV.2203.17070},
-  url = {https://arxiv.org/abs/2203.17070},
-  author = {Eichenberger, Christian and Neun, Moritz and Martin, Henry and Herruzo, Pedro and Spanring, Markus and Lu, Yichao and Choi, Sungbin and Konyakhin, Vsevolod and Lukashina, Nina and Shpilman, Aleksei and Wiedemann, Nina and Raubal, Martin and Wang, Bo and Vu, Hai L. and Mohajerpoor, Reza and Cai, Chen and Kim, Inhi and Hermes, Luca and Melnik, Andrew and Velioglu, Riza and Vieth, Markus and Schilling, Malte and Bojesomo, Alabi and Marzouqi, Hasan Al and Liatsis, Panos and Santokhi, Jay and Hillier, Dylan and Yang, Yiming and Sarwar, Joned and Jordan, Anna and Hewage, Emil and Jonietz, David and Tang, Fei and Gruca, Aleksandra and Kopp, Michael and Kreil, David and Hochreiter, Sepp},
-  keywords = {Machine Learning (cs.LG), FOS: Computer and information sciences, FOS: Computer and information sciences},
-  title = {Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes},
-  publisher = {arXiv},
-  year = {2022},
-  copyright = {Creative Commons Attribution Non Commercial Share Alike 4.0 International}
+@InProceedings{pmlr-v176-eichenberger22a,
+  title = 	 {Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes},
+  author =       {Eichenberger, Christian and Neun, Moritz and Martin, Henry and Herruzo, Pedro and Spanring, Markus and Lu, Yichao and Choi, Sungbin and Konyakhin, Vsevolod and Lukashina, Nina and Shpilman, Aleksei and Wiedemann, Nina and Raubal, Martin and Wang, Bo and Vu, Hai L. and Mohajerpoor, Reza and Cai, Chen and Kim, Inhi and Hermes, Luca and Melnik, Andrew and Velioglu, Riza and Vieth, Markus and Schilling, Malte and Bojesomo, Alabi and Marzouqi, Hasan Al and Liatsis, Panos and Santokhi, Jay and Hillier, Dylan and Yang, Yiming and Sarwar, Joned and Jordan, Anna and Hewage, Emil and Jonietz, David and Tang, Fei and Gruca, Aleksandra and Kopp, Michael and Kreil, David and Hochreiter, Sepp},
+  booktitle = 	 {Proceedings of the NeurIPS 2021 Competitions and Demonstrations Track},
+  pages = 	 {97--112},
+  year = 	 {2022},
+  editor = 	 {Kiela, Douwe and Ciccone, Marco and Caputo, Barbara},
+  volume = 	 {176},
+  series = 	 {Proceedings of Machine Learning Research},
+  month = 	 {06--14 Dec},
+  publisher =    {PMLR},
+  pdf = 	 {https://proceedings.mlr.press/v176/eichenberger22a/eichenberger22a.pdf},
+  url = 	 {https://proceedings.mlr.press/v176/eichenberger22a.html},
+  abstract = 	 {The IARAI Traffic4cast competitions at NeurIPS 2019 and 2020 showed that neural networks can successfully predict future traffic conditions 1 hour into the future on simply aggregated GPS probe data in time and space bins. We thus reinterpreted the challenge of forecasting traffic conditions as a movie completion task. U-Nets proved to be the winning architecture, demonstrating an ability to extract relevant features in this complex real-world geo-spatial process. Building on the previous competitions, Traffic4cast 2021 now focuses on the question of model robustness and generalizability across time and space. Moving from one city to an entirely different city, or moving from pre-COVID times to times after COVID hit the world thus introduces a clear domain shift. We thus, for the first time, release data featuring such domain shifts. The competition now covers ten cities over 2 years, providing data compiled from over $10^{12}$ GPS probe data. Winning solutions captured traffic dynamics sufficiently well to even cope with these complex domain shifts. Surprisingly, this seemed to require only the previous 1h traffic dynamic history and static road graph as input. }
 }
 
 @InProceedings{pmlr-v133-kopp21a,
@@ -548,6 +553,6 @@ Please cite this repo along with the papers of the previous competitions:
 }
 ```
 
-* [Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes](https://arxiv.org/abs/2203.17070)
+* [Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes](https://proceedings.mlr.press/v176/eichenberger22a/eichenberger22a.pdf)
 * [Traffic4cast at NeurIPS 2020 - yet more on the unreasonable effectiveness of gridded geo-spatial processes](http://proceedings.mlr.press/v133/kopp21a/kopp21a.pdf)
 * [The surprising efficiency of framing geo-spatial time series forecasting as a video prediction task – Insights from the IARAI \t4c Competition at NeurIPS 2019](http://proceedings.mlr.press/v123/kreil20a/kreil20a.pdf)
