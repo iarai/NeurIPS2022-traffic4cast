@@ -183,10 +183,10 @@ For both core and extended competitions each:
 
 
 ## Submission
-The leaderboard are not open yet (see [Timeline](#timeline) above).
+The leaderboards will be open according to the [Timeline](#timeline) above.
 You will need to upload a zip file with your solution through the [Traffic4cast web site](https://www.iarai.ac.at/traffic4cast/) as in previous years.
-We will provide format specification, code and examples to create submissions when the leaderboards open.
-
+See [`t4c22/evaluation/README.md`](https://github.com/iarai/NeurIPS2022-traffic4cast/blob/main/t4c22/evaluation/README.md) for  code and examples to create submissions.
+The details for the format can be found in [`README_DATA_SPECIFICATION.md`](https://github.com/iarai/NeurIPS2022-traffic4cast/blob/main/README_DATA_SPECIFICATION.md).
 
 
 ## Repo sitemap
