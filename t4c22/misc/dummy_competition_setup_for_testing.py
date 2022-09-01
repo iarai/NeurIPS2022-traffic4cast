@@ -35,6 +35,7 @@ def create_dummy_competition_setup(  # noqa:C901
     skip_movie: bool = True,
     skip_submission: bool = True,
     skip_tests: bool = False,
+    skip_supersegments: bool = True,
 ):
 
     # `road_graph`
@@ -46,8 +47,8 @@ def create_dummy_competition_setup(  # noqa:C901
             "speed_kph": 50.0,
             "importance": 1,
             "highway": "tertiary",
-            "oneway": True,
-            "lanes": 4,
+            "oneway": False,
+            "lanes": 2,
             "tunnel": "",
             "length_meters": 47.84958973,
             "counter_distance": 2,
@@ -64,6 +65,45 @@ def create_dummy_competition_setup(  # noqa:C901
             "tunnel": "",
             "length_meters": 47.234523,
             "counter_distance": 3,
+        },
+        {
+            "u": 457298457598,
+            "v": 10495890,
+            "parsed_maxspeed": 50.0,
+            "speed_kph": 50.0,
+            "importance": 1,
+            "highway": "tertiary",
+            "oneway": False,
+            "lanes": 2,
+            "tunnel": "",
+            "length_meters": 47.84958973,
+            "counter_distance": 2,
+        },
+        {
+            "u": 457298457598,
+            "v": 9824598274857,
+            "parsed_maxspeed": 30.0,
+            "speed_kph": 30.0,
+            "importance": 1,
+            "highway": "residential",
+            "oneway": False,
+            "lanes": 1,
+            "tunnel": "",
+            "length_meters": 831.456,
+            "counter_distance": 4,
+        },
+        {
+            "u": 9824598274857,
+            "v": 457298457598,
+            "parsed_maxspeed": 30.0,
+            "speed_kph": 30.0,
+            "importance": 1,
+            "highway": "residential",
+            "oneway": False,
+            "lanes": 1,
+            "tunnel": "",
+            "length_meters": 831.456,
+            "counter_distance": 4,
         },
     ]
     edges_parquet = basedir / "road_graph" / city / "road_graph_edges.parquet"
@@ -100,6 +140,30 @@ def create_dummy_competition_setup(  # noqa:C901
         pandas.DataFrame.from_records(nodes),
         fn=nodes_parquet,
     )
+    if not skip_supersegments:
+        supersegments_parquet = basedir / "road_graph" / city / "road_graph_supersegments.parquet"
+        supersegments = [
+            {
+                "identifier": "10495890,9824598274857",
+                "nodes": [
+                    10495890,
+                    457298457598,
+                    9824598274857,
+                ],
+            },
+            {
+                "identifier": "9824598274857,10495890",
+                "nodes": [
+                    9824598274857,
+                    457298457598,
+                    10495890,
+                ],
+            },
+        ]
+        write_df_to_parquet(
+            pandas.DataFrame.from_records(supersegments),
+            fn=supersegments_parquet,
+        )
 
     # `train/<city>/input/counters_<date>.parquet`
     for train_date in train_dates:
