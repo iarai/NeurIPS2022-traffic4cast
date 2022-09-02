@@ -34,6 +34,7 @@ ETA_SUMS = {"london": 14940784306.865263, "madrid": 13610842992.839167, "melbour
 
 def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Competitions]]):
     summary = []
+    all_good = True
     if competitions is None or T4c22Competitions.CORE in competitions:
         print(f"/ start core competition check")
         d = {}
@@ -43,12 +44,13 @@ def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Comp
             assert len(label_file_list) == EXPECTED_NUM_TRAINING_LABEL_FILES[city], (len(label_file_list), EXPECTED_NUM_TRAINING_LABEL_FILES[city])
             for file in tqdm.tqdm(label_file_list, desc=city):
                 df = load_df_from_parquet(file)
-                assert len(df[df["cc"].isna()]) == 0, (file, df["c"].isna())
+                assert len(df[df["cc"].isna()]) == 0, (file, df[df["cc"].isna()])
                 assert df["cc"].min() >= 0, (file, df["cc"].min())
                 assert df["cc"].max() <= 3, (file, df["cc"].max())
                 cc_sum += df["cc"].astype(np.float64).sum()
             d[city] = cc_sum
             cc_sum_check = np.isclose(cc_sum, CC_SUMS[city])
+            all_good = all_good and cc_sum_check
             python_check = "(\u2713)" if cc_sum_check else "(\u2717)"
             msg = str((city, (cc_sum, CC_SUMS[city]))) if not cc_sum_check else city
             msg = f"{python_check} cc sum check {msg}"
@@ -68,15 +70,16 @@ def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Comp
             assert len(label_file_list) == EXPECTED_NUM_TRAINING_LABEL_FILES[city], (len(label_file_list), EXPECTED_NUM_TRAINING_LABEL_FILES[city])
             for file in tqdm.tqdm(label_file_list, desc=city):
                 df = load_df_from_parquet(file)
-                assert len(df[df["eta"].isna()]) == 0, df["eta"].isna()
+                assert len(df[df["eta"].isna()]) == 0, (file, df[df["eta"].isna()])
                 num_supersegments_city = NUM_SUPERSEGMENTS[city]
                 assert len(df) == num_supersegments_city * 96, (len(df), num_supersegments_city * 96)
 
-                assert (df.groupby(["day", "t"], sort=False).agg(lambda x: len(x.unique()))["identifier"] == num_supersegments_city).all()
+                assert (df.groupby(["day", "t"], sort=False).agg(lambda x: len(x.unique()))["identifier"] == num_supersegments_city).all(), file
 
                 eta_sum += df["eta"].astype(np.float64).sum()
             d[city] = eta_sum
             eta_sum_check = np.isclose(eta_sum, ETA_SUMS[city])
+            all_good = all_good and eta_sum_check
             python_check = "(\u2713)" if eta_sum_check else "(\u2717)"
             msg = str((city, (eta_sum, ETA_SUMS[city]))) if not eta_sum_check else city
             msg = f"{python_check} eta sum check {msg}"
@@ -93,6 +96,9 @@ def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Comp
     print("")
     print("Summary:")
     print("\n".join(summary))
+
+    if not all_good:
+        raise Exception("(\u2717) Not all checks successful")
 
 
 def create_parser() -> argparse.ArgumentParser:
