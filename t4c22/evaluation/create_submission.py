@@ -59,6 +59,34 @@ def inference_cc_city_plain_torch_to_pandas(test_dataset: T4c22Dataset, predict:
     return df
 
 
+@torch.no_grad()
+def inference_eta_city_plain_torch_to_pandas(test_dataset: T4c22Dataset, predict: Callable[[Any], torch.Tensor]) -> pd.DataFrame:
+    dfs = []
+    for idx, data in tqdm.tqdm(enumerate(test_dataset), total=len(test_dataset)):
+        y_hat: Tensor = predict(data)
+        df = test_dataset.torch_road_graph_mapping._torch_to_df_eta(data=y_hat, day="test", t=idx)
+        dfs.append(df)
+    df = pd.concat(dfs)
+    df["test_idx"] = df["t"]
+    del df["day"]
+    del df["t"]
+    return df
+
+
+@torch.no_grad()
+def inference_eta_city_torch_geometric_to_pandas(test_dataset: T4c22GeometricDataset, predict: Callable[[torch_geometric.data], torch.Tensor]) -> pd.DataFrame:
+    dfs = []
+    for idx, data in tqdm.tqdm(enumerate(test_dataset), total=len(test_dataset)):
+        y_hat: Tensor = predict(data)
+        df = test_dataset.torch_road_graph_mapping._torch_to_df_eta(data=y_hat, day="test", t=idx)
+        dfs.append(df)
+    df = pd.concat(dfs)
+    df["test_idx"] = df["t"]
+    del df["day"]
+    del df["t"]
+    return df
+
+
 def create_submission_cc_torch_geometric(
     config: Dict[str, Tuple[T4c22GeometricDataset, Callable[[torch_geometric.data], torch.Tensor]]],
     submission_name: str,
@@ -83,6 +111,30 @@ def create_submission_cc_torch_geometric(
     print(submission_zip)
 
 
+def create_submission_eta_torch_geometric(
+    config: Dict[str, Tuple[T4c22GeometricDataset, Callable[[torch_geometric.data], torch.Tensor]]],
+    submission_name: str,
+    basedir: Path,
+    cities: Optional[List[str]] = None,
+):
+    if cities is None:
+        cities = CITIES
+    for city in cities:
+        test_dataset, predict = config[city]
+        df_city = inference_eta_city_torch_geometric_to_pandas(test_dataset=test_dataset, predict=predict)
+        (basedir / "submission" / submission_name / city / "labels").mkdir(exist_ok=True, parents=True)
+        write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet")
+
+    submission_zip = basedir / "submission" / f"{submission_name}.zip"
+    with zipfile.ZipFile(submission_zip, "w") as z:
+        for city in cities:
+            z.write(
+                filename=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet",
+                arcname=os.path.join(city, "labels", f"eta_labels_test.parquet"),
+            )
+    print(submission_zip)
+
+
 def create_submission_cc_plain_torch(
     config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]], submission_name: str, basedir: Path, cities: Optional[List[str]] = None
 ):
@@ -101,5 +153,27 @@ def create_submission_cc_plain_torch(
             z.write(
                 filename=basedir / "submission" / submission_name / city / "labels" / f"cc_labels_test.parquet",
                 arcname=os.path.join(city, "labels", f"cc_labels_test.parquet"),
+            )
+    print(submission_zip)
+
+
+def create_submission_eta_plain_torch(
+    config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]], submission_name: str, basedir: Path, cities: Optional[List[str]] = None
+):
+    if cities is None:
+        cities = CITIES
+
+    for city in cities:
+        test_dataset, predict = config[city]
+        df_city = inference_eta_city_plain_torch_to_pandas(test_dataset=test_dataset, predict=predict)
+        (basedir / "submission" / submission_name / city / "labels").mkdir(exist_ok=True, parents=True)
+        write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet")
+
+    submission_zip = basedir / "submission" / f"{submission_name}.zip"
+    with zipfile.ZipFile(submission_zip, "w") as z:
+        for city in cities:
+            z.write(
+                filename=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet",
+                arcname=os.path.join(city, "labels", f"eta_labels_test.parquet"),
             )
     print(submission_zip)

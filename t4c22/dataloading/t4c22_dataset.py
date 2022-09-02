@@ -9,6 +9,7 @@
 #  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
+from enum import Enum
 from functools import partial
 from pathlib import Path
 from typing import Optional
@@ -22,6 +23,11 @@ from t4c22.t4c22_config import day_t_filter_weekdays_daytime_only
 from t4c22.t4c22_config import load_inputs
 
 
+class T4c22Competitions(Enum):
+    CORE = "cc"
+    EXTENDED = "eta"
+
+
 class T4c22Dataset(torch.utils.data.Dataset):
     def __init__(
         self,
@@ -32,6 +38,7 @@ class T4c22Dataset(torch.utils.data.Dataset):
         cachedir: Optional[Path] = None,
         limit: int = None,
         day_t_filter=day_t_filter_weekdays_daytime_only,
+        competition: T4c22Competitions = T4c22Competitions.CORE,
     ):
         """Dataset for t4c22 core competition (congestion classes) for one
         city.
@@ -71,12 +78,14 @@ class T4c22Dataset(torch.utils.data.Dataset):
         self.city = city
         self.limit = limit
         self.day_t_filter = day_t_filter if split != "test" else None
+        self.competition = competition
 
         self.torch_road_graph_mapping = TorchRoadGraphMapping(
             city=city,
             edge_attributes=edge_attributes,
             root=root,
             df_filter=partial(day_t_filter_to_df_filter, filter=day_t_filter) if self.day_t_filter is not None else None,
+            skip_supersegments=self.competition == T4c22Competitions.CORE,
         )
 
         # `day_t: List[Tuple[Y-m-d-str,int_0_96]]`
@@ -120,11 +129,16 @@ class T4c22Dataset(torch.utils.data.Dataset):
         # y: congestion classes on edges at +60'
         y = None
         if self.cachedir is not None:
-            cache_file = self.cachedir / f"cc_labels_{self.city}_{day}_{t}.pt"
+            cache_file = self.cachedir / (
+                f"cc_labels_{self.city}_{day}_{t}.pt" if self.competition == T4c22Competitions.CORE else f"eta_labels_{self.city}_{day}_{t}.pt"
+            )
             if cache_file.exists():
                 y = torch.load(cache_file)
         if y is None:
-            y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+            if self.competition == T4c22Competitions.CORE:
+                y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+            else:
+                y = self.torch_road_graph_mapping.load_eta_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
 
             if self.cachedir is not None:
                 self.cachedir.mkdir(exist_ok=True, parents=True)

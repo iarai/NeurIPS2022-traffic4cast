@@ -23,6 +23,10 @@ NUM_SLOTS_AGGREGATED = 4
 NUM_ROWS = 19
 NUM_COLUMNS = 17
 
+NUM_EDGES = 5
+NUM_NODES = 3
+NUM_SUPERSEGMENTS = 2
+
 
 def create_dummy_competition_setup(  # noqa:C901
     basedir: Path,
@@ -35,9 +39,10 @@ def create_dummy_competition_setup(  # noqa:C901
     skip_movie: bool = True,
     skip_submission: bool = True,
     skip_tests: bool = False,
-    skip_supersegments: bool = True,
+    skip_supersegments: bool = False,
+    seed: int = 666,
 ):
-
+    np.random.seed(seed=seed)
     # `road_graph`
     edges = [
         {
@@ -106,6 +111,8 @@ def create_dummy_competition_setup(  # noqa:C901
             "counter_distance": 4,
         },
     ]
+    assert len(edges) == NUM_EDGES, (len(edges), NUM_EDGES)
+
     edges_parquet = basedir / "road_graph" / city / "road_graph_edges.parquet"
     edges_parquet.parent.mkdir(parents=True, exist_ok=True)
     write_df_to_parquet(
@@ -136,6 +143,7 @@ def create_dummy_competition_setup(  # noqa:C901
             "y": 40.9483728957,
         },
     ]
+    assert len(nodes) == NUM_NODES, (len(nodes), NUM_NODES)
     write_df_to_parquet(
         pandas.DataFrame.from_records(nodes),
         fn=nodes_parquet,
@@ -160,6 +168,7 @@ def create_dummy_competition_setup(  # noqa:C901
                 ],
             },
         ]
+        assert len(supersegments) == NUM_SUPERSEGMENTS, (len(supersegments), NUM_SUPERSEGMENTS)
         write_df_to_parquet(
             pandas.DataFrame.from_records(supersegments),
             fn=supersegments_parquet,
@@ -231,6 +240,23 @@ def create_dummy_competition_setup(  # noqa:C901
                 ),
                 fn=cc_labels_parquet,
             )
+            eta_labels_parquet = basedir / "train" / city / "labels" / f"eta_labels_{train_date}.parquet"
+            eta_labels_parquet.parent.mkdir(parents=True, exist_ok=True)
+            write_df_to_parquet(
+                pandas.DataFrame.from_records(
+                    [
+                        {
+                            "identifier": supersegment["identifier"],
+                            "day": train_date,
+                            "t": t,
+                            "eta": np.clip(np.random.normal(loc=30, scale=10), a_min=2, a_max=None),
+                        }
+                        for t in range(96)
+                        for supersegment in supersegments
+                    ]
+                ),
+                fn=eta_labels_parquet,
+            )
 
     if not skip_tests:
         counters_parquet = basedir / "test" / city / "input" / f"counters_test.parquet"
@@ -270,6 +296,24 @@ def create_dummy_competition_setup(  # noqa:C901
             ),
             fn=cc_labels_parquet,
         )
+        if not skip_supersegments:
+            eta_labels_parquet = basedir / "withheld" / "golden" / city / "labels" / f"eta_labels_test.parquet"
+            eta_labels_parquet.parent.mkdir(parents=True, exist_ok=True)
+            write_df_to_parquet(
+                pandas.DataFrame.from_records(
+                    [
+                        {
+                            "identifier": supersegment["identifier"],
+                            "test_idx": test_idx,
+                            "eta": np.clip(np.random.normal(loc=30, scale=10), a_min=2, a_max=None),
+                        }
+                        for test_idx in range(num_test_slots)
+                        for supersegment in supersegments
+                    ]
+                ),
+                fn=eta_labels_parquet,
+            )
+
     if test_dates is not None:
         for test_date in test_dates:
             cc_labels_parquet = basedir / "withheld" / "test" / city / "labels" / f"cc_labels_{test_date}.parquet"

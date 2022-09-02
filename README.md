@@ -30,9 +30,11 @@
 - [LONDON_2022.zip](https://developer.here.com/sample-data) from HERE (2.8 GB)
 - [MADRID_2022.zip](https://developer.here.com/sample-data) from HERE (4.0 GB)
 - [MELBOURNE_2022.zip](https://developer.here.com/sample-data) from HERE (0.9 GB)
-- [T4C_INPUTS_2022.zip](http://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
+- [T4C_INPUTS_2022.zip](https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
+- [T4C_INPUTS_ETA_2022.zip](https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_ETA_2022.zip) (available September 2, 2022, 1.5MB)
 - Tests for the core competition are contained in `T4C_INPUTS_2022.zip` above.
-- [T4C_TESTS_EXTENDED_2022.zip](https://www.iarai.ac.at/traffic4cast/challenge/) available September 2, 2022
+- Tests for the extended competition are contained in `T4C_INPUTS_2022.zip` above (same as for core competition).
+
 
 For more details, see [Folder Structure](#folder-structure) below.
 
@@ -57,6 +59,8 @@ python t4c22/misc/check_torch_geometric_setup.py
 After downloading the data (see [Download Links](#download-links)), run
 ```bash
 prepare_training_data_cc.py -d <data folder with unzipped downloads>
+prepare_training_data_eta.py -d <data folder with unzipped downloads>
+prepare_training_check_labels.py -d <data folder with unzipped downloads>
 ```
 
 
@@ -87,8 +91,8 @@ Interested in understanding traffic around the globe in a novel way? [Join us](h
 
 ### Task
 Given one hour of sparse loop count data only the task is to predict the congestion
-classification for all road segments 15 minutes into the future (green, yellow, and red lines). For the
-extended challenge the prediction targets are Expected Times of Arrival along super-segments.
+classification (`cc`) for all road segments 15 minutes into the future (green, yellow, and red lines). For the
+extended challenge the prediction targets are Travel Times or Expected Times of Arrival (`eta`) along supersegments.
 
 Not only the input data is sparse, but also the ground truth labels are sparse. As GPS fleets comprise only a subset of all vehicles in traffic, many segments cannot be classified from the data without further data assimilation (as in production systems).
 Models need to be able to cope with such sparse signal during training while still being able to predict accurately whenever ground truth labels are available. See [Metric](#metric) below.
@@ -134,15 +138,17 @@ the following ground truth labels.
 Labels in the core competition are congestion classes for each segment in the road graph: red/congested, yellow/warning, green/uncongested.
 The class is derived through from the aggregated GPS probe data; if not enough data is available to derive the congestion class, it will output
 missing value. For ease of use we will provide the training data as a graph representation.
-The code for deriving congestion classes will be made public. At test time we provide only the loop counter input
-and evaluate only against locations where data is available to derive the congestion class.
+At test time we provide only the loop counter input and evaluate only against locations where data is available to derive the congestion class.
+See [Generate Labels](#generate-labels) for the code used to derive congestion classes.
 
-#### Extended Challenge: Travel Time (ETA) for each super-segment
-Labels in the extended competition are congestion classes  Travel Time (ETA) for each super-segment.
-This is calculated using the weighted average of the speed in the intersecting cells and the length of the super-segment. This is compatible
-with how industry-standard routing engines are deriving their segment speeds. We will also
-provide the training data for this challenge as a graph representation. The function to derive ETAs will be made public.
+#### Extended Challenge: Travel Time (ETA) for each supersegment
+Labels in the extended competition are travel times (or Expected Time of Arrival, ETA) for each supersegment.
+The dynamic speed data (GPS probes) is used to derive travel times on the edges of the graph and then summed up to supersegment ETAs.
+This is compatible with how industry-standard routing engines are deriving their segment speeds. The use of supersegments is motivated by contraction hierarchies, which are a common strategy in most commercial routing engines.
+Also, the use of supersegments helps to make the ETAs derived from the underlying speed data more robust to data outliers.
 At test time we provide only the loop counter input.
+See [Generate Labels](#generate-labels) for the code used to derive ETAs.
+
 
 ### Novelty
 Traffic4cast 2022 seamlessly connects to and builds on our previous competitions at NeurIPS 2019,
@@ -207,7 +213,7 @@ The details for the format can be found in [`README_DATA_SPECIFICATION.md`](http
 See [Download Links](#download-links) above.
 
 ### Overview
-The following figure shows an overview of the data for the Traffic4cast 2022 Competition at NeurIPS and how it is used in the competition. For legal reasons, participants need to download speed data and generate edge labels from them locally. We provide the script to do that and it will take approx. 20 minutes. Node data can be downloaded from AWS from the public links below.
+The following figure shows an overview of the data for the Traffic4cast 2022 Competition at NeurIPS and how it is used in the competition. For legal reasons, participants need to download speed data and generate edge labels from them locally. We provide the script to do that and it will take approx. 45 minutes for cc generation and approx. 90 minutes for eta generation. Node data can be downloaded from AWS from the public links below.
 <img src="./img/data_overview.svg">
 
 More details can be found in `data_pipeline/README.md`
@@ -235,15 +241,18 @@ After unzipping, you should have received the following merged folder structure
 │   ├── london
 │   │   ├── cell_mapping.parquet
 │   │   ├── road_graph_edges.parquet
-│   │   └── road_graph_nodes.parquet
+│   │   ├── road_graph_nodes.parquet
+│   │   └── road_graph_supersegments.parquet
 │   ├── madrid
 │   │   ├── cell_mapping.parquet
 │   │   ├── road_graph_edges.parquet
-│   │   └── road_graph_nodes.parquet
+│   │   ├── road_graph_nodes.parquet
+│   │   └── road_graph_supersegments.parquet
 │   └── melbourne
 │       ├── cell_mapping.parquet
 │       ├── road_graph_edges.parquet
-│       └── road_graph_nodes.parquet
+│       ├── road_graph_nodes.parquet
+│       └── road_graph_supersegments.parquet
 ├── movie
 │   ├── london
 |   │   ├── 2019-07-01_london_8ch.h5
@@ -341,14 +350,16 @@ the result only under the same licence."
 See details of the copyright at https://www.openstreetmap.org/copyright and the full legal
 code of the license at https://opendatacommons.org/licenses/odbl/1-0/
 
-The files road_graph_edges.parquet and road_graph_nodes.parquet contain the simplified graph
+The files `road_graph_edges.parquet` and `road_graph_nodes.parquet` contain the simplified graph
 with the bare minimum attributes as node/edge graph structure. Where necessary additional
 nodes were added for the mapping to the loop counter locations (see above). Otherwise the
 the original OSM node IDs were retained.
 
-The file cell_mapping.parquet provides a mapping of each edge in the road graph to the
+The file `cell_mapping.parquet` provides a mapping of each edge in the road graph to the
 intersecting cells in the Traffic4cast Traffic Map Movie grid for the corresponding city
-(based on bounding_boxes.geojson).
+(based on `bounding_boxes.geojson`).
+
+The file `road_graph_supersegments.parquet` contains the list of supersegments for the extended competition along with the list of corresponding nodes.
 
 
 **submissions**
@@ -398,8 +409,8 @@ for more information see https://github.com/iarai/NeurIPS2022-traffic4cast
 For each city, we're using approx. 6 months of data, interleaving training and test data on a weekly basis (1 week of training and 1 week for test):
 | City          | Period            |
 |---------------|-------------------|
-| Madrid        | 2021-06-01 - 2021-12-31 |
 | London        | 2019-07-01 - 2020-01-31 |
+| Madrid        | 2021-06-01 - 2021-12-31 |
 | Melbourne     | 2020-06-01 - 2020-12-30 |
 
 More information can be found:
@@ -408,18 +419,24 @@ More information can be found:
 
 
 ### Generating Training Labels
-The script `t4c22/prepare_training_data_cc.py` prepares congestion class training labels using speed_classes. This should take less than half an hour.
+The script `t4c22/prepare_training_data_cc.py`/`t4c22/prepare_training_data_eta.py` prepares congestion class/supersemgent eta training labels using speed_classes. This should take less than 45 minutes for cc generation and less than 90 minutes for eta generation.
 
-Prior to starting you should have downloaded and extracted the following 4
+Prior to starting you should have downloaded and extracted the following 5
 ZIP files to the same working data directory (`<working_dir>`):
 - LONDON_2022.zip from https://developer.here.com/sample-data
 - MADRID_2022.zip from https://developer.here.com/sample-data
 - MELBOURNE_2022.zip from https://developer.here.com/sample-data
-- T4C_INPUTS_2022.zip from http://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip
+- T4C_INPUTS_2022.zip from https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip
+- T4C_INPUTS_ETA_2022.zip from https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_ETA_2022.zip
 
 
-The script needs the following two folders in `<working_dir>`
+
+These scripts require the following folders in `<working_dir>`
 ```
+├── road_graph
+│   ├── london
+│   ├── madrid
+│   └── melbourne
 ├── speed_classes
 │   ├── london
 │   ├── madrid
@@ -429,10 +446,31 @@ The script needs the following two folders in `<working_dir>`
     ├── madrid
     └── melbourne
 ```
-It has the following command-line interface:
+They will create the following label files
+```
+└── train
+    ├── london
+    │   └── labels
+    │       ├── cc_labels_2019-07-01.parquet
+    │       ├── eta_labels_2019-07-01.parquet
+    │          ...
+    ├── madrid
+    │   └── labels
+    │       ├── cc_labels_2021-06-01.parquet
+    │       ├── eta_labels_2021-06-01.parquet
+    │          ...
+    └── melbourne
+        └── labels
+            ├── cc_labels_2020-06-01.parquet
+            ├── eta_labels_2020-06-01.parquet
+                ...
+```
+
+They have the following command-line interface:
 ```
 Usage:
   prepare_training_data_cc.py [-h] -d DATA_FOLDER [-r]
+  prepare_training_data_eta.py [-h] -d DATA_FOLDER [-r]
 
 Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
@@ -440,8 +478,10 @@ Arguments:
   -r, --resume          Resume processing without regenerating existing files
 ```
 
+
+
 ## Metric
-### Metric core competition (congestion classes)
+### Metric core competition (congestion classes `cc`)
 We use masked cross-entropy loss on congestion classes:
 
 
@@ -475,8 +515,10 @@ We provide
 * average the macro-averaged city scores of the 3 cities to get an overall score.
 
 
-References: [torch.nn.CrossEntropyLoss](https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html), [scikit multiclas classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)
+References: [torch.nn.CrossEntropyLoss](https://pytorch.org/docs/stable/generated/torch.nn.CrossEntropyLoss.html), [scikit multiclass classification](https://scikit-learn.org/stable/modules/model_evaluation.html#multiclass-and-multilabel-classification)
 
+### Metric extended competition (supersegment travel times `eta`)
+We use [L1 Loss](https://pytorch.org/docs/stable/generated/torch.nn.L1Loss.html) for the extended competitions. Notice that in contrast to the core competitions, there is no "evaluation mask", i.e. all supersegments have an ETA label.
 
 ## Test set
 
@@ -484,17 +526,17 @@ References: [torch.nn.CrossEntropyLoss](https://pytorch.org/docs/stable/generate
 We will restrict evaluation to a subset 6am-10pm (including weekends).
 However, all data can be used for training.
 
-We will provide the code we use for evaluation and code to generate own validation sets  when the leaderboards open.
+We are providing the code we use for evaluation and code to generate own validation sets.
 
-### Test set extended competition (super-segment average speed `eta`)
-Forthcoming
+### Test set extended competition (supersegment travel times `eta`)
+We use the exactly same test set for the extended competition as for the core competition (same input files `test/<city>/input/counters_test.parquet`)
 
 ## Data loaders
 We provide a plain torch and torch geometric data loader, see `t4c22.dataloading` and the working examples under `exploration`.
 
 
 ## Baselines (forthcoming)
-The task can be tackled in many ways, from GNN to attention-based to working on the grid (movies).
+The tasks can be tackled in many ways, from GNN to attention-based to working on the grid (movies).
 
 In the mean-time, see the examples under `exploration` with working data loading.
 

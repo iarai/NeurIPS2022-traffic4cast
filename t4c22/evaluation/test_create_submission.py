@@ -18,10 +18,12 @@ import torch.nn.functional as F
 from torch import nn
 from torch_geometric.nn import MessagePassing
 
+from t4c22.dataloading.t4c22_dataset import T4c22Competitions
 from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.dataloading.t4c22_dataset_geometric import T4c22GeometricDataset
 from t4c22.evaluation.create_submission import create_submission_cc_plain_torch
 from t4c22.evaluation.create_submission import create_submission_cc_torch_geometric
+from t4c22.evaluation.create_submission import create_submission_eta_plain_torch
 from t4c22.evaluation.create_submission import inference_cc_city_plain_torch_to_pandas
 from t4c22.evaluation.create_submission import inference_cc_city_torch_geometric_to_pandas
 from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
@@ -140,43 +142,63 @@ def predict_dummy_gnn(data, device, model, predictor):
     return y_hat
 
 
-class DummyUniformNN(torch.nn.Module):
+class DummyUniformNN_cc(torch.nn.Module):
     def __init__(self, num_edges: int):
-        super(DummyUniformNN, self).__init__()
+        super(DummyUniformNN_cc, self).__init__()
         self.num_edges = num_edges
 
     def forward(self, x):
         return torch.full((self.num_edges, 3), np.log(1 / 3))
 
 
-class DummyInfNN(torch.nn.Module):
+class DummyNormalNN_eta(torch.nn.Module):
+    def __init__(self, num_supersegments: int):
+        super(DummyNormalNN_eta, self).__init__()
+        self.num_edges = num_supersegments
+
+    def forward(self, x):
+        y_hat = torch.normal(torch.arange(self.num_edges).float())
+        return y_hat
+
+
+class DummyArangeNN_eta(torch.nn.Module):
+    def __init__(self, num_supersegments: int):
+        super(DummyArangeNN_eta, self).__init__()
+        self.num_edges = num_supersegments
+
+    def forward(self, x):
+        y_hat = torch.arange(self.num_edges).float()
+        return y_hat
+
+
+class DummyInfNN_cc(torch.nn.Module):
     def __init__(self, num_edges: int):
-        super(DummyInfNN, self).__init__()
+        super(DummyInfNN_cc, self).__init__()
         self.num_edges = num_edges
 
     def forward(self, x):
         return torch.full((self.num_edges, 3), torch.inf)
 
 
-class DummyOnesNN(torch.nn.Module):
+class DummyOnesNN_cc(torch.nn.Module):
     def __init__(self, num_edges: int):
-        super(DummyOnesNN, self).__init__()
+        super(DummyOnesNN_cc, self).__init__()
         self.num_edges = num_edges
 
     def forward(self, x):
         return torch.full((self.num_edges, 3), 1)
 
 
-class DummyRandomNN(torch.nn.Module):
+class DummyRandomNN_cc(torch.nn.Module):
     def __init__(self, num_edges: int):
-        super(DummyRandomNN, self).__init__()
+        super(DummyRandomNN_cc, self).__init__()
         self.num_edges = num_edges
 
     def forward(self, x):
         return torch.log(torch.rand(self.num_edges, 3))
 
 
-def apply_model(data, device, model):
+def apply_model_plain(data, device, model):
     x, y = data
     x = x.to(device)
     return model(x)
@@ -283,9 +305,9 @@ def test_create_submission_cc_city_plain_torch():
 
         test_dataset = T4c22Dataset(root=basedir, city=city, split="test")
 
-        model = DummyUniformNN(num_edges=len(test_dataset.torch_road_graph_mapping.edges))
+        model = DummyUniformNN_cc(num_edges=len(test_dataset.torch_road_graph_mapping.edges))
 
-        submission = inference_cc_city_plain_torch_to_pandas(predict=partial(apply_model, device=device, model=model), test_dataset=test_dataset)
+        submission = inference_cc_city_plain_torch_to_pandas(predict=partial(apply_model_plain, device=device, model=model), test_dataset=test_dataset)
 
         print(submission)
 
@@ -307,12 +329,40 @@ def test_create_submission_cc_plain_torch():
 
             test_dataset = T4c22Dataset(root=basedir, city=city, split="test")
 
-            model = DummyUniformNN(num_edges=len(test_dataset.torch_road_graph_mapping.edges))
+            model = DummyUniformNN_cc(num_edges=len(test_dataset.torch_road_graph_mapping.edges))
 
-            config[city] = (test_dataset, partial(apply_model, device=device, model=model))
+            config[city] = (test_dataset, partial(apply_model_plain, device=device, model=model))
 
         create_submission_cc_plain_torch(config=config, basedir=basedir, submission_name="gogogo")
 
         assert (basedir / "submission" / "gogogo.zip").exists()
         for city in cities:
             assert (basedir / "submission" / "gogogo" / city / "labels" / "cc_labels_test.parquet").exists()
+
+
+def test_create_submission_eta_plain_torch():
+    cities = ["london", "melbourne", "madrid"]
+    date = "1970-01-01"
+    num_test_slots = 22
+    device = f"cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device(device)
+
+    with tempfile.TemporaryDirectory() as basedir:
+        basedir = Path(basedir)
+        config = {}
+        for city in cities:
+            create_dummy_competition_setup(
+                basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_golden=True, skip_submission=True
+            )
+
+            test_dataset = T4c22Dataset(root=basedir, city=city, split="test", competition=T4c22Competitions.EXTENDED)
+
+            model = DummyNormalNN_eta(num_supersegments=len(test_dataset.torch_road_graph_mapping.supersegments))
+
+            config[city] = (test_dataset, partial(apply_model_plain, device=device, model=model))
+
+        create_submission_eta_plain_torch(config=config, basedir=basedir, submission_name="gogogo")
+
+        assert (basedir / "submission" / "gogogo.zip").exists()
+        for city in cities:
+            assert (basedir / "submission" / "gogogo" / city / "labels" / "eta_labels_test.parquet").exists()

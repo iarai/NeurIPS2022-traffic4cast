@@ -19,9 +19,9 @@ from t4c22.dataloading.t4c22_dataset import T4c22Dataset  # noqa
 from t4c22.dataloading.t4c22_dataset_geometric import T4c22GeometricDataset
 from t4c22.evaluation.create_submission import create_submission_cc_plain_torch
 from t4c22.evaluation.create_submission import create_submission_cc_torch_geometric
-from t4c22.evaluation.test_create_submission import apply_model
 from t4c22.evaluation.test_create_submission import apply_model_geometric
-from t4c22.evaluation.test_create_submission import DummyRandomNN
+from t4c22.evaluation.test_create_submission import apply_model_plain
+from t4c22.evaluation.test_create_submission import DummyRandomNN_cc
 from t4c22.misc.t4c22_logging import t4c_apply_basic_logging_config
 from t4c22.t4c22_config import load_basedir
 
@@ -49,7 +49,7 @@ def main(basedir: Path, submission_name: str, model_class, dataset_class, geom=F
         # load.load_state_dict(torch.load(your-checkpoint, map_location=device)) #noqa
 
         if not geom:
-            config[city] = (test_dataset, partial(apply_model, device=device, model=model))
+            config[city] = (test_dataset, partial(apply_model_plain, device=device, model=model))
         else:
             config[city] = (test_dataset, partial(apply_model_geometric, device=device, model=model))
 
@@ -65,7 +65,7 @@ if __name__ == "__main__":
     # dataset_class = T4c22Dataset#noqa
     # geom = False#noqa
 
-    model_class = DummyRandomNN
+    model_class = DummyRandomNN_cc
     dataset_class = T4c22GeometricDataset
     geom = True
 

@@ -27,6 +27,7 @@ import sys
 import tempfile
 import time
 import zipfile
+from enum import Enum
 from functools import partial
 from multiprocessing import Pool
 from pathlib import Path
@@ -35,35 +36,65 @@ from typing import List
 from typing import Tuple
 
 import numpy as np
+import pandas as pd
 import pyarrow.parquet as pq
 import torch
 import tqdm
 
 
-# copied from t4c22.metric.masked_crossentropy import get_weights_from_class_fractions to have this script run standalone
+# from t4c22.dataloading.t4c22_dataset import T4c22Competitions # noqa
+class T4c22Competitions(Enum):
+    CORE = "cc"
+    EXTENDED = "eta"
+
+
+# from t4c22.metric.masked_crossentropy import get_weights_from_class_fractions # noqa
 def get_weights_from_class_fractions(class_fractions):
     n = np.sum(class_fractions)
     return [n / (c * 3) for c in class_fractions]
 
 
-# copied from t4c22.t4c22_config import class_fractions to have this script run standalone
+# from t4c22.misc.parquet_helpers import load_df_from_parquet # noqa
+def load_df_from_parquet(fn: Path):
+    return pq.read_table(fn).to_pandas()
+
+
+# from t4c22.t4c22_config import class_fractions # noqa
 class_fractions = {
     "london": ({"green": 0.5367906303432076, "yellow": 0.35138063340805714, "red": 0.11182873624873524}),
     "madrid": {"green": 0.4976221039083026, "yellow": 0.3829591430424158, "red": 0.1194187530492816},
     "melbourne": {"green": 0.7018930324884697, "yellow": 0.2223245729555099, "red": 0.0757823945560204},
 }
 
-
-# copied from t4c22.misc.parquet_helpers import load_df_from_parquet to have this script run standalone
-def load_df_from_parquet(fn: Path):
-    return pq.read_table(fn).to_pandas()
-
-
 MAXSIZE = 800 * 1024 * 1024 * 8
 dataset_filters = {
     "all": lambda df: df,
     # "counter_distance_zero": lambda df: df[df["counter_distance"] == 0],#noqa
     # "workdays_daytime": lambda df: df[(df["weekday"]<5)&(df["h"]>7)&(df["h"]<22)], #noqa
+}
+SCOREFILE_CONFIG = {
+    T4c22Competitions.CORE: {
+        ".score": "all_weighted",
+    },
+    T4c22Competitions.EXTENDED: {
+        ".score": "all",
+    },
+}
+SCORES_CONFIG = {T4c22Competitions.CORE: ["all_weighted", "all_unweighted"], T4c22Competitions.EXTENDED: ["all"]}
+
+
+EXPECTED_NUM_SLOTS = 100
+EXPECTED_NUM_ITEMS = {
+    T4c22Competitions.CORE.value: {
+        "london": 132414 * EXPECTED_NUM_SLOTS,
+        "madrid": 121902 * EXPECTED_NUM_SLOTS,
+        "melbourne": 94871 * EXPECTED_NUM_SLOTS,
+    },
+    T4c22Competitions.EXTENDED.value: {
+        "london": 4012 * EXPECTED_NUM_SLOTS,
+        "madrid": 3969 * EXPECTED_NUM_SLOTS,
+        "melbourne": 3246 * EXPECTED_NUM_SLOTS,
+    },
 }
 
 
@@ -91,13 +122,33 @@ def _merge_pred_true_cc(df_pred, df_true):
     return df_merged
 
 
-def evaluate_city_cc(df_pred, df_true, class_fractions: Dict[str, float], df_merged=None):
+def _merge_pred_true_eta(df_pred, df_true):
+    logging.debug(f"evaluate_submission_cc {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    pred_columns = ["identifier", "test_idx", "eta"]
+    for k in pred_columns:
+        assert k in df_pred.columns, (k, df_pred.columns)
+    # avoid clashes
+    df_pred = df_pred[pred_columns]
+
+    true_columns = ["identifier", "test_idx", "eta"]
+    for k in true_columns:
+        assert k in df_true.columns, (k, df_true.columns)
+    df_true = df_true[true_columns]
+
+    logging.debug(f"start merge {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    df_merged = df_pred.merge(df_true, left_on=["identifier", "test_idx"], right_on=["identifier", "test_idx"], suffixes=["_pred", ""])
+    assert len(df_merged) == len(df_true), (len(df_merged), len(df_true))
+    logging.debug(f"end merge {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+
+    return df_merged
+
+
+def evaluate_city_cc(df_pred, df_true, class_fractions: Dict[str, float], df_merged=None) -> Tuple[Dict, pd.DataFrame]:
     if df_merged is None:
         df_merged = _merge_pred_true_cc(df_pred, df_true)
     report = {}
 
     for key, filter_func in tqdm.tqdm(dataset_filters.items()):
-
         df = filter_func(df_merged)
 
         y_hat = torch.tensor(df[["logit_green", "logit_yellow", "logit_red"]].to_numpy()).float()
@@ -118,10 +169,43 @@ def evaluate_city_cc(df_pred, df_true, class_fractions: Dict[str, float], df_mer
     return report, df_merged
 
 
-def evaluate_city_cc_parquet(test_file, golden_file, city):
+def evaluate_city_eta(df_pred, df_true, df_merged=None) -> Tuple[Dict, pd.DataFrame]:
+    df_merged = _merge_pred_true_eta(df_pred, df_true)
+    loss_f = torch.nn.L1Loss()
+    y_hat = torch.tensor(df_merged["eta_pred"].to_numpy()).float()
+    y = torch.tensor(df_merged["eta"].to_numpy()).float()
+    loss = float(loss_f(y_hat, y).numpy())
+    return {
+        "all": {
+            "metric": "torch.nn.L1Loss",
+            "loss": loss,
+        }
+    }, df_merged
+
+
+def evaluate_city_cc_parquet(test_file: str, golden_file: str, city: str, participants_logger_name: str):
     df_pred = load_df_from_parquet(test_file)
+
+    expected_num_items = EXPECTED_NUM_ITEMS[T4c22Competitions.CORE.value][city]
+    if len(df_pred) != expected_num_items:
+        msg = f"Your submission for core competition (cc) for {city} is expected to have length {expected_num_items}, found {len(df_pred)}. "
+        participants_logger = logging.getLogger(participants_logger_name)
+        participants_logger.error(msg)
+        raise Exception(msg)
     df_true = load_df_from_parquet(golden_file)
     return evaluate_city_cc(df_pred, df_true, class_fractions=class_fractions[city])
+
+
+def evaluate_city_eta_parquet(test_file: str, golden_file: str, city: str, participants_logger_name: str):
+    df_pred = load_df_from_parquet(test_file)
+    expected_num_items = EXPECTED_NUM_ITEMS[T4c22Competitions.EXTENDED.value][city]
+    if len(df_pred) != expected_num_items:
+        msg = f"Your submission for extended competition (eta) for {city} is expected to have length {expected_num_items}, found {len(df_pred)}. "
+        participants_logger = logging.getLogger(participants_logger_name)
+        participants_logger.error(msg)
+        raise Exception(msg)
+    df_true = load_df_from_parquet(golden_file)
+    return evaluate_city_eta(df_pred, df_true)
 
 
 def sanitize(a):
@@ -139,7 +223,7 @@ def average_city_scores(scores_dict: Dict, city_keys: List[str], cities: List[st
             d[ki] = sanitize(v)
 
 
-def do_score(ground_truth_archive: str, input_archive: str, participants_logger_name) -> Tuple[float, Dict]:
+def do_score(ground_truth_archive: str, input_archive: str, participants_logger_name, competition: T4c22Competitions) -> Tuple[float, Dict]:
     start_time = time.time()
     participants_logger = logging.getLogger(participants_logger_name)
 
@@ -175,21 +259,33 @@ def do_score(ground_truth_archive: str, input_archive: str, participants_logger_
                         city_name = f.split("/")[0]
                         prediction_f_extracted = prediction_f.extract(f, path=temp_dir_prediction)
                         ground_truth_f_extracted = ground_truth_f.extract(f, path=temp_dir_ground_truth)
-                        report, _ = evaluate_city_cc_parquet(test_file=prediction_f_extracted, golden_file=ground_truth_f_extracted, city=city_name)
+                        if competition == T4c22Competitions.CORE:
+                            report, _ = evaluate_city_cc_parquet(
+                                test_file=prediction_f_extracted,
+                                golden_file=ground_truth_f_extracted,
+                                city=city_name,
+                                participants_logger_name=participants_logger_name,
+                            )
+                        else:
+                            report, _ = evaluate_city_eta_parquet(
+                                test_file=prediction_f_extracted,
+                                golden_file=ground_truth_f_extracted,
+                                city=city_name,
+                                participants_logger_name=participants_logger_name,
+                            )
 
                         logging.info(f"City scores {city_name}")
                         scores_dict[city_name] = report
 
-    # N.B. we give the average of the per-city-normalized masked mse!
-    average_city_scores(scores_dict, city_keys=["all_weighted", "all_unweighted"], cities=["london", "madrid", "melbourne"])
-    score = scores_dict["all"]["all_weighted"]
+    average_city_scores(scores_dict, city_keys=SCORES_CONFIG[competition], cities=["london", "madrid", "melbourne"])
+    score = scores_dict["all"][SCOREFILE_CONFIG[competition][".score"]]
     elapsed_seconds = time.time() - start_time
     logging.info(f"scoring {os.path.basename(input_archive)} took {elapsed_seconds :.1f}s")
     logging.info(f"Scores {scores_dict}")
     return score, scores_dict
 
 
-def score_participant(input_archive: str, ground_truth_archive: str):
+def score_participant(input_archive: str, ground_truth_archive: str, competition: T4c22Competitions):
     submission_id = os.path.basename(input_archive).replace(".zip", "")
 
     full_handler = logging.FileHandler(input_archive.replace(".zip", "-full.log"))
@@ -210,9 +306,7 @@ def score_participant(input_archive: str, ground_truth_archive: str):
     participants_logger.info(f"start scoring of {input_archive_basename}")
     participants_logger.addHandler(full_handler)
 
-    score_file_extensions = {
-        ".score": "all_weighted",
-    }
+    score_file_extensions = SCOREFILE_CONFIG[competition]
     for score_file_ext in score_file_extensions:
         score_file = input_archive.replace(".zip", score_file_ext)
         with open(score_file, "w") as f:
@@ -220,7 +314,7 @@ def score_participant(input_archive: str, ground_truth_archive: str):
     try:
         # do scoring and update score file
         vanilla_score, scores_dict = do_score(
-            input_archive=input_archive, ground_truth_archive=ground_truth_archive, participants_logger_name=participants_logger_name
+            input_archive=input_archive, ground_truth_archive=ground_truth_archive, participants_logger_name=participants_logger_name, competition=competition
         )
         with open(json_score_file, "w") as f:
             json.dump(scores_dict, f)
@@ -245,16 +339,16 @@ def score_participant(input_archive: str, ground_truth_archive: str):
         participants_logger.error(f"Evaluation errors for {input_archive_basename}, contact us for details via github issues.")
 
 
-def score_unscored_participants(ground_truth_archive, jobs, submissions_folder):
+def score_unscored_participants(ground_truth_archive, jobs, submissions_folder, competition: T4c22Competitions):
     all_submissions = [z.replace(".zip", "") for z in glob.glob(f"{submissions_folder}/*.zip")]
     unscored = [s for s in all_submissions if not os.path.exists(os.path.join(submissions_folder, f"{s}.score"))]
     unscored_zips = [os.path.join(submissions_folder, f"{s}.zip") for s in unscored]
     if jobs == 0:
         for u in unscored_zips:
-            score_participant(u, ground_truth_archive=ground_truth_archive)
+            score_participant(u, ground_truth_archive=ground_truth_archive, competition=competition)
     else:
         with Pool(processes=jobs) as pool:
-            _ = list(pool.imap_unordered(partial(score_participant, ground_truth_archive=ground_truth_archive), unscored_zips))
+            _ = list(pool.imap_unordered(partial(score_participant, ground_truth_archive=ground_truth_archive, competition=competition), unscored_zips))
 
 
 def create_parser() -> argparse.ArgumentParser:
@@ -291,6 +385,8 @@ def create_parser() -> argparse.ArgumentParser:
     parser.add_argument("-j", "--jobs", type=int, help="Number of jobs to run in parallel", required=False, default=1)
     parser.add_argument("-v", "--verbose", help="Do not silence caught exceptions.", required=False, default=False, action="store_true")
 
+    parser.add_argument("-c", "--competition", type=T4c22Competitions, help="Competition", required=False, default=T4c22Competitions.CORE)
+
     return parser
 
 
@@ -305,17 +401,20 @@ def main(args):  # noqa C901
         ground_truth_archive = params["ground_truth_archive"]
         jobs = params["jobs"]
         verbose = params["verbose"]
+        competition = params["competition"]
 
         if params["input_archive"] is not None:
             try:
-                score_participant(input_archive=params["input_archive"], ground_truth_archive=ground_truth_archive)
+                score_participant(input_archive=params["input_archive"], ground_truth_archive=ground_truth_archive, competition=competition)
             except Exception as e:
                 # exceptions are logged to participants and full log. Should we remove score file in case of runtime exception (OOM)?
                 if verbose:
                     raise e
         elif params["submissions_folder"] is not None:
             try:
-                score_unscored_participants(ground_truth_archive=ground_truth_archive, jobs=jobs, submissions_folder=params["submissions_folder"])
+                score_unscored_participants(
+                    ground_truth_archive=ground_truth_archive, jobs=jobs, submissions_folder=params["submissions_folder"], competition=competition
+                )
             except Exception as e:
                 # exceptions are logged to participants and full log. Should we remove score file in case of runtime exception (OOM)?
                 if verbose:

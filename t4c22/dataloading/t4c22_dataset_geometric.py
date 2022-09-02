@@ -16,6 +16,7 @@ import torch
 import torch_geometric
 
 from t4c22.dataloading.road_graph_mapping import TorchRoadGraphMapping
+from t4c22.dataloading.t4c22_dataset import T4c22Competitions
 from t4c22.t4c22_config import cc_dates
 from t4c22.t4c22_config import day_t_filter_to_df_filter
 from t4c22.t4c22_config import day_t_filter_weekdays_daytime_only
@@ -33,6 +34,7 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
         cachedir: Optional[Path] = None,
         limit: int = None,
         day_t_filter=day_t_filter_weekdays_daytime_only,
+        competition: T4c22Competitions = T4c22Competitions.CORE,
     ):
         """Dataset for t4c22 core competition (congestion classes) for one
         city.
@@ -73,12 +75,14 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
         self.city = city
         self.limit = limit
         self.day_t_filter = day_t_filter if split != "test" else None
+        self.competition = competition
 
         self.torch_road_graph_mapping = TorchRoadGraphMapping(
             city=city,
             edge_attributes=edge_attributes,
             root=root,
             df_filter=partial(day_t_filter_to_df_filter, filter=day_t_filter) if self.day_t_filter is not None else None,
+            skip_supersegments=self.competition == T4c22Competitions.CORE,
         )
 
         # `day_t: List[Tuple[Y-m-d-str,int_0_96]]`
@@ -110,7 +114,10 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
         split = self.split
 
         if self.cachedir is not None:
-            cache_file = self.cachedir / f"data_{city}_{day}_{t}.pt"
+            cache_file = self.cachedir / (
+                f"cc_labels_{self.city}_{day}_{t}.pt" if self.competition == T4c22Competitions.CORE else f"eta_labels_{self.city}_{day}_{t}.pt"
+            )
+
             if cache_file.exists():
                 data = torch.load(cache_file)
                 return data
@@ -121,7 +128,11 @@ class T4c22GeometricDataset(torch_geometric.data.Dataset):
         # y: congestion classes on edges at +60'
         y = None
         if self.split != "test":
-            y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+            if self.competition == T4c22Competitions.CORE:
+                y = self.torch_road_graph_mapping.load_cc_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+            else:
+                y = self.torch_road_graph_mapping.load_eta_labels_day_t(basedir=basedir, city=city, split=split, day=day, t=t, idx=idx)
+
         # https://pytorch-geometric.readthedocs.io/en/latest/modules/data.html:
         #         x (Tensor, optional) – Node feature matrix with shape [num_nodes, num_node_features]. (default: None)
         #         edge_index (LongTensor, optional) – Graph connectivity in COO format with shape [2, num_edges]. (default: None)

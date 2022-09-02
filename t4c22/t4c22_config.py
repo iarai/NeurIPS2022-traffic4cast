@@ -106,15 +106,19 @@ df_filter_weekdays_daytime_only: DF_FILTER = partial(day_t_filter_to_df_filter, 
 # -----------------------------------------------------------------------------------------------------
 
 
-def load_road_graph(basedir: Path, city: str) -> Tuple[pd.DataFrame, pd.DataFrame]:
+def load_road_graph(basedir: Path, city: str, skip_supersegments: bool = True) -> Tuple[pd.DataFrame, pd.DataFrame, Optional[pd.DataFrame]]:
     """Helper for loading edges and nodes data frame from basedir for the given
     city."""
     fn = basedir / "road_graph" / city / "road_graph_edges.parquet"
     df_edges = pq.read_table(fn).to_pandas()
     fn = basedir / "road_graph" / city / "road_graph_nodes.parquet"
     df_nodes = pq.read_table(fn).to_pandas()
+    df_supersegments = None
+    if not skip_supersegments:
+        fn = basedir / "road_graph" / city / "road_graph_supersegments.parquet"
+        df_supersegments = pq.read_table(fn).to_pandas()
 
-    return df_edges, df_nodes
+    return df_edges, df_nodes, df_supersegments
 
 
 def load_inputs(basedir: Path, city, split="train", day: Optional[str] = None, df_filter: DF_FILTER = df_filter_weekdays_daytime_only) -> pd.DataFrame:
@@ -160,8 +164,29 @@ def load_cc_labels(
     if df_filter is not None:
         df = df_filter(df)
     if with_edge_attributes:
-        df_edges, df_nodes = load_road_graph(basedir, city)
+        df_edges, df_nodes, _ = load_road_graph(basedir, city)
         df = df.merge(df_edges, on=["u", "v"], how="left", suffixes=("", "_"))
+    return df
+
+
+def load_eta_labels(basedir: Path, city, split="train", day=None, df_filter: DF_FILTER = df_filter_weekdays_daytime_only) -> pd.DataFrame:
+    """Helper for laoding cc labels from basedir.
+
+    Optionally for given day only, optionally filtering, and optionally
+    merging with edges.
+    """
+    if split == "test":
+        datadir = basedir / "withheld" / "golden" / city / "labels"
+    else:
+        datadir = basedir / split / city / "labels"
+    if day is not None:
+        fn = datadir / f"eta_labels_{day}.parquet"
+        df = pq.read_table(fn).to_pandas()
+    else:
+        dfs = [pq.read_table(fn).to_pandas() for fn in datadir.rglob("eta_labels*.parquet")]
+        df = pd.concat(dfs)
+    if df_filter is not None:
+        df = df_filter(df)
     return df
 
 
@@ -176,9 +201,36 @@ def cc_dates(basedir: Path, city, split="train") -> List[str]:
 
 
 # derived through `run_cc_distribution(split="train")`, see `exploration/cc_distribution.ipynb`
-# this is from the participants' training data
+# this is from the participants' training data from the release published 2022-07-27
 class_fractions = {
     "london": ({"green": 0.5367906303432076, "yellow": 0.35138063340805714, "red": 0.11182873624873524}),
     "madrid": {"green": 0.4976221039083026, "yellow": 0.3829591430424158, "red": 0.1194187530492816},
     "melbourne": {"green": 0.7018930324884697, "yellow": 0.2223245729555099, "red": 0.0757823945560204},
+}
+
+
+# -----------------------------------------------------------------------------------------------------
+# SIZES ROAD GRAPH
+# -----------------------------------------------------------------------------------------------------
+# these counts are for the release published 2022-07-27 and 2022-09-02
+
+NUM_NODES = {
+    "london": 59110,
+    "madrid": 63397,
+    "melbourne": 49510,
+}
+NUM_COUNTERS = {
+    "london": 3751,
+    "madrid": 3875,
+    "melbourne": 3982,
+}
+NUM_EDGES = {
+    "london": 132414,
+    "madrid": 121902,
+    "melbourne": 94871,
+}
+NUM_SUPERSEGMENTS = {
+    "london": 4012,
+    "madrid": 3969,
+    "melbourne": 3246,
 }
