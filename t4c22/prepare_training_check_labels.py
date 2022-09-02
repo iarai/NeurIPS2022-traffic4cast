@@ -85,7 +85,6 @@ def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Comp
             msg = f"{python_check} eta sum check {msg}"
             print("")
             print(msg)
-            print(msg)
             summary.append(msg)
 
         print("")
@@ -99,6 +98,8 @@ def sanity_check_labels(data_folder: Path, competitions: Optional[List[T4c22Comp
 
     if not all_good:
         raise Exception("(\u2717) Not all checks successful")
+    else:
+        print("All checks succesful!")
 
 
 def create_parser() -> argparse.ArgumentParser:
