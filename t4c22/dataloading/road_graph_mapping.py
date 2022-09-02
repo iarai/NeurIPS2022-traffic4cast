@@ -16,16 +16,17 @@ import pandas as pd
 import torch
 
 from t4c22.t4c22_config import load_cc_labels
+from t4c22.t4c22_config import load_eta_labels
 from t4c22.t4c22_config import load_inputs
 from t4c22.t4c22_config import load_road_graph
 
 
 class TorchRoadGraphMapping:
-    def __init__(self, city: str, root: Path, df_filter, edge_attributes=None):
+    def __init__(self, city: str, root: Path, df_filter, edge_attributes=None, skip_supersegments: bool = True):
         self.df_filter = df_filter
 
         # load road graph
-        df_edges, df_nodes = load_road_graph(root, city)
+        df_edges, df_nodes, df_supersegments = load_road_graph(root, city, skip_supersegments=skip_supersegments)
 
         # `ExternalNodeId = int64 (the osm ids)`
         # `InternalNodeId = int (0,...,num_edges-1)`
@@ -74,6 +75,20 @@ class TorchRoadGraphMapping:
 
                 for j, attr in enumerate(edge_attributes):
                     self.edge_attr[i, j] = edge[attr]
+
+        # supersegments
+        # `ExternalSupersegmentId = int64 (the generated ids)`
+        # `InternalSupersegmentId = int (0,...,num_supersegments-1)`
+        # `supersegments: List[ExternalSupersegmentId]`
+        self.supersegments = None
+        # `supersegments_d: ExternalSupersegmentId -> InternalSupersegmentId`
+        self.supersegments_d = None
+        # `supersegments_to_edges_mapping: List[List[Tuple[ExternalNodeId,ExternalNodeId]]]`
+        self.supersegment_to_edges_mapping = None
+        if df_supersegments is not None:
+            self.supersegments = [r["identifier"] for r in df_supersegments.to_dict("records")]
+            self.supersegments_d = {r["identifier"]: i for i, r in enumerate(df_supersegments.to_dict("records"))}
+            self.supersegment_to_edges_mapping = [[(u, v) for u, v in zip(r["nodes"], r["nodes"][1:])] for r in df_supersegments.to_dict("records")]
 
     def load_inputs_day_t(self, basedir: Path, city: str, split: str, day: str, t: int, idx: int) -> torch.Tensor:
         """Used by dataset getter to load input data (sparse loop counter data
@@ -146,6 +161,36 @@ class TorchRoadGraphMapping:
             logging.warning(f"{split} {city} {(idx, day, t)} no classified")
         return y
 
+    def load_eta_labels_day_t(self, basedir: Path, city: str, split: str, day: str, t: int, idx: int) -> torch.Tensor:
+        """Used by dataset getter to load eta (sparse) on supersegments from
+        parquet into tensor.
+
+        Parameters
+        ----------
+        basedir: data basedir see `README`
+        city: "london"/"madrid"/"melbourne"
+        split: "train"/"test"/...
+        day: date
+        t: time of day in 15-minutes in range [0,....96)
+        idx: dataset index
+
+
+        Returns
+        -------
+        Float tensor of size (number-of-supersegments,), with supersegment eta and nan if unavailable.
+        """
+        df_y = load_eta_labels(basedir, city=city, split=split, day=day, df_filter=self.df_filter)
+        if day == "test":
+            data = df_y[(df_y["test_idx"] == idx)]
+        else:
+            data = df_y[(df_y["day"] == day) & (df_y["t"] == t)]
+
+        y = self._df_eta_to_torch(data)
+
+        if len(data) == 0:
+            logging.warning(f"{split} {city} {(idx, day, t)} no classified")
+        return y
+
     def _df_cc_to_torch(self, data: pd.DataFrame) -> torch.Tensor:
         """
         Parameters
@@ -198,6 +243,40 @@ class TorchRoadGraphMapping:
         )
         df["u"] = froms
         df["v"] = tos
+        df["day"] = day
+        df["t"] = t
+        return df
+
+    def _df_eta_to_torch(self, data: pd.DataFrame) -> torch.Tensor:
+        """
+        Parameters
+        ----------
+        data: data frame for (day,t) with columns "identifier", "eta".
+
+        Returns
+        -------
+        Float tensor of size (number-of-supersegments,), containing etas and nan if undefined
+        """
+        y = torch.full(size=(len(self.supersegments),), fill_value=float("nan"))
+        if len(data) > 0:
+            assert len(data) <= len(self.supersegments)
+            data["supersegment_index"] = [self.supersegments_d[identifier] for identifier in data["identifier"]]
+            y[data["supersegment_index"].values] = torch.tensor(data["eta"].values).float()
+        return y
+
+    def _torch_to_df_eta(self, data: torch.Tensor, day: str, t: int) -> pd.DataFrame:
+        """
+        Parameters
+        ----------
+        Float tensor of size (number-of-supersegments,) with etas.
+
+        Returns
+        -------
+        Data frame for (day,t) with columns "identifier", "day", "t", "eta".
+        """
+
+        df = pd.DataFrame(data=data.cpu().numpy(), columns=["eta"])
+        df["identifier"] = self.supersegments
         df["day"] = day
         df["t"] = t
         return df

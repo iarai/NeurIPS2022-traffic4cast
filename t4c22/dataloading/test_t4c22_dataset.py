@@ -16,10 +16,13 @@ import pytest
 import torch
 import tqdm
 
+from t4c22.dataloading.t4c22_dataset import T4c22Competitions
 from t4c22.dataloading.t4c22_dataset import T4c22Dataset
 from t4c22.dataloading.t4c22_dataset_geometric import T4c22GeometricDataset
 from t4c22.evaluation.create_submission import inference_cc_city_plain_torch_to_pandas
-from t4c22.evaluation.test_create_submission import DummyRandomNN
+from t4c22.evaluation.test_create_submission import apply_model_geometric
+from t4c22.evaluation.test_create_submission import apply_model_plain
+from t4c22.evaluation.test_create_submission import DummyRandomNN_cc
 from t4c22.misc.add_position_to_edges import add_node_attributes_to_edges_parquet
 from t4c22.misc.dummy_competition_setup_for_testing import create_dummy_competition_setup
 from t4c22.misc.parquet_helpers import load_df_from_parquet
@@ -118,10 +121,74 @@ def test_T4c22Dataset(dataset_class, extractor, edge_attributes, use_cachedir): 
                 _ = extractor(data)
 
 
-def test_create_submission_cc_city_plain_torch():
+@pytest.mark.parametrize(
+    "dataset_class,extractor,edge_attributes,use_cachedir",
+    [
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, True),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, False),
+        (T4c22Dataset, lambda data: data, None, True),
+        (T4c22Dataset, lambda data: data, None, False),
+    ],
+)
+def test_T4c22Dataset_Extended(dataset_class, extractor, edge_attributes, use_cachedir):  # noqa:C901
+    city = "gotham"
+    date = "1970-01-01"
+    num_test_slots = 22
+    with tempfile.TemporaryDirectory() as basedir:
+        with tempfile.TemporaryDirectory() as cachedir:
+            basedir = Path(basedir)
+            cachedir = Path(cachedir)
+            if not use_cachedir:
+                cachedir = None
+
+            create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots)
+
+            ds = dataset_class(
+                root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=edge_attributes, competition=T4c22Competitions.EXTENDED
+            )
+            for idx, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
+                if edge_attributes is None:
+                    x, y = extractor(data)
+                else:
+                    x, y, edge_attr = extractor(data)
+                day, t = ds.day_t[idx]
+
+                # --------------------------------------------
+                #  supersegments
+                # --------------------------------------------
+                # reload etas from parquet
+                fn = basedir / "train" / city / "labels" / f"eta_labels_{day}.parquet"
+                df = load_df_from_parquet(fn)
+
+                df = df[(df["day"] == day) & (df["t"] == t)]
+
+                for identifier, y_actual in zip(ds.torch_road_graph_mapping.supersegments, y):
+                    df_ = df[df["identifier"] == identifier]
+                    assert len(df_) == 1, df_
+                    y_expected = df_.iloc[0]["eta"]
+
+                    if torch.isnan(y_actual):
+                        assert torch.isnan(y_expected)
+                    else:
+                        assert y_expected == y_actual, df_
+
+            ds = dataset_class(root=basedir, city=city, split="test", cachedir=cachedir, day_t_filter=None, competition=T4c22Competitions.EXTENDED)
+            assert len(ds) == num_test_slots
+            for _, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
+                _ = extractor(data)
+
+
+@pytest.mark.parametrize(
+    "dataset_class,model_class,apply_model",
+    [
+        (T4c22GeometricDataset, DummyRandomNN_cc, apply_model_geometric),
+        (T4c22Dataset, DummyRandomNN_cc, apply_model_plain),
+    ],
+)
+def test_create_submission_cc_city_plain_torch(dataset_class, model_class, apply_model):
     """Test torch -> pandas -> torch works correctly, i.e. going through pandas
     does not change."""
-    # TODO same with geometric?
+
     city = "gotham"
     date = "1970-01-01"
     num_test_slots = 22
@@ -130,13 +197,13 @@ def test_create_submission_cc_city_plain_torch():
 
         create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[], test_dates=[date], num_test_slots=num_test_slots)
 
-        ds = T4c22Dataset(root=basedir, city=city, split="test")
+        ds = dataset_class(root=basedir, city=city, split="test")
 
         seed = 666
 
-        model = DummyRandomNN(num_edges=len(ds.torch_road_graph_mapping.edges))
+        model = model_class(num_edges=len(ds.torch_road_graph_mapping.edges))
 
-        predict, y_hats_torch = _inference_torch(ds, model, seed)
+        predict, y_hats_torch = _inference_torch(ds=ds, model=model, apply_model=apply_model, seed=seed)
 
         torch.manual_seed(seed)
         df = inference_cc_city_plain_torch_to_pandas(test_dataset=ds, predict=predict)
@@ -145,21 +212,17 @@ def test_create_submission_cc_city_plain_torch():
         assert torch.allclose(y_hats_torch_pandas_torch, y_hats_torch)
 
 
-def _inference_torch(ds, model, seed=None):
-    def predict(data, device, model):
-        x, y = data
-        x = x.to(device)
-        return model(x)
+def _inference_torch(ds, model, apply_model, seed=None):
 
     device = f"cuda" if torch.cuda.is_available() else "cpu"
     device = torch.device(device)
-    predict = partial(predict, device=device, model=model)
+    apply_model = partial(apply_model, device=device, model=model)
     if seed is not None:
         torch.manual_seed(seed)
     y_hats_torch = []
     for _, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
-        y_hat = predict(data)
+        y_hat = apply_model(data)
         y_hats_torch.append(y_hat)
         x, y = data
     y_hats_torch = torch.cat(y_hats_torch)
-    return predict, y_hats_torch
+    return apply_model, y_hats_torch

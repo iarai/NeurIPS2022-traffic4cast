@@ -14,6 +14,9 @@ from t4c22.misc.notebook_helpers import restartkernel
 from t4c22.misc.t4c22_logging import t4c_apply_basic_logging_config
 from t4c22.plotting.plot_congestion_classification import plot_segment_classifications_simple
 from t4c22.t4c22_config import load_basedir
+from t4c22.t4c22_config import NUM_COUNTERS
+from t4c22.t4c22_config import NUM_EDGES
+from t4c22.t4c22_config import NUM_NODES
 
 GCN.forward
 restartkernel
@@ -21,3 +24,8 @@ TorchRoadGraphMapping._torch_to_df_cc
 plot_segment_classifications_simple
 t4c_apply_basic_logging_config
 load_basedir
+TorchRoadGraphMapping.supersegment_to_edges_mapping
+TorchRoadGraphMapping._torch_to_df_eta
+NUM_COUNTERS
+NUM_EDGES
+NUM_NODES

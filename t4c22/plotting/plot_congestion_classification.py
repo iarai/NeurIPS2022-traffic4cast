@@ -32,7 +32,7 @@ def plot_segment_classifications_simple(  # noqa:C901
             elif cc == 1:
                 ax.add_patch(Rectangle((t, 1), 1, 1, fill=True, facecolor="green"))
             elif cc == 2:
-                ax.add_patch(Rectangle((t, 2), 1, 1, fill=True, facecolor="yellow"))
+                ax.add_patch(Rectangle((t, 2), 1, 1, fill=True, facecolor="gold"))
             elif cc == 3:
                 ax.add_patch(Rectangle((t, 3), 1, 1, fill=True, facecolor="red"))
             if other_classifications is not None:
@@ -72,7 +72,7 @@ def plot_segment_classifications_simple(  # noqa:C901
     if proba_green is not None:
         ax.plot([i + 0.5 for i in range(len(dayline_labels))], proba_green, color="green")
     if proba_yellow is not None:
-        ax.plot([i + 0.5 for i in range(len(dayline_labels))], proba_yellow, color="yellow")
+        ax.plot([i + 0.5 for i in range(len(dayline_labels))], proba_yellow, color="gold")
     if proba_red is not None:
         ax.plot([i + 0.5 for i in range(len(dayline_labels))], proba_red, color="red")
     ax.set_ylim([0, 1])
