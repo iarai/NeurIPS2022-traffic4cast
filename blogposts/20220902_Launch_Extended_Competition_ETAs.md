@@ -7,7 +7,7 @@ Supersegments and ETAs
 
 Labels in the extended competition are travel times (or Expected Time of Arrival, ETA) for supersegments. Supersegments are paths in the underlying road graph:
 
-![traffic4cast2020](media/supersegments_table.png)
+![supersegments_table](media/supersegments_table.png)
 
 There is never more than one supersegment per origin-destination pair.
 
@@ -28,7 +28,7 @@ At test time we provide only the loop counter input.
 
 The derivation of supersegments gives high weight to important road segments, as can bee seen from the picture below. By sampling key intersection nodes (triangles) and then routing between pairs of them with some stopping criterion (blue-purple, reflecting different numbers of nodes with loop counters on the supersegment), the same edge (green box) can appear in multiple supersegments (yellow).
 
-![traffic4cast2020](media/supersegments.png)
+![supersegments_highlighted](media/supersegments_highlighted.png)
 
 In a subsequent blog post, we will provide more details on the derivation of supersegments and ETAs on supersegments.
 
