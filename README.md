@@ -202,6 +202,7 @@ The details for the format can be found in [`README_DATA_SPECIFICATION.md`](http
 ├── exploration                    <-- getting started with t4c22
 ├── data_pipeline                  <-- data and competition preparation pipeline (forthcoming)
 ├── baselines                      <-- competition baselines (forthcoming)
+├── blogposts                      <-- competition blogposts with additional information and discussion
 └── t4c22                          <-- code for t4c22 (can be installed as library)
     ├── evaluation                 <-- helpers for creating submissions, code for generating test set and evaluating test set (forthcoming)
     ├── dataloading                <-- data loader for pytorch (plain and geometric)

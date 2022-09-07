@@ -11,7 +11,7 @@ We will restrict evaluation to a subset 6am-10pm from all days of the week (incl
 
 However, all data can be used for training.
 
-![traffic4cast2020](media/test_slots_distribution.png)
+![test_slots_distribution](media/test_slots_distribution.png)
 
 Submissions
 -----------
@@ -25,7 +25,7 @@ The submission zip for the core competition must have the following file structu
 
 The parquet files must contain `logit_green`/`logit_yellow`/`logit_red` for every edge `u`,`v` and test slot `test_idx`.
 
-![traffic4cast2020](media/df_cc_submision.png)
+![df_cc_submision](media/df_cc_submision.png)
 
 See [README_DATA_SPECIFICATION.md](https://github.com/iarai/NeurIPS2022-traffic4cast/blob/main/README_DATA_SPECIFICATION.md)  for the details.
 
@@ -47,11 +47,11 @@ Evaluation uses `torch.nn.CrossEntropyLoss` to evaluate your submissions, see al
 
 Upload your submissions on https://www.iarai.ac.at/traffic4cast/challenge/
 
-![traffic4cast2020](media/leaderboard.png)
+![leaderboard](media/leaderboard.png)
 
 The evaluation runs twice an hour. If evaluation fails, you can download the log file. Please contact us if there is a problem so we can improve the error handling and documentation.
 
-![traffic4cast2020](media/submission_to_leaderboard.png)
+![submission_to_leaderboard](media/submission_to_leaderboard.png)
 
 See code under [t4c22/evaluation](https://github.com/iarai/NeurIPS2022-traffic4cast/blob/main/t4c22/evaluation/)
 
