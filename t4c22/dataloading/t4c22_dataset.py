@@ -39,6 +39,7 @@ class T4c22Dataset(torch.utils.data.Dataset):
         limit: int = None,
         day_t_filter=day_t_filter_weekdays_daytime_only,
         competition: T4c22Competitions = T4c22Competitions.CORE,
+        counters_only: bool = False,
     ):
         """Dataset for t4c22 core competition (congestion classes) for one
         city.
@@ -70,6 +71,8 @@ class T4c22Dataset(torch.utils.data.Dataset):
         cachedir: location for single item .pt files (created on first access if cachedir is given)
         limit: limit the dataset to at most limit items (for debugging)
         day_t_filter: filter taking day and t as input for filtering the data. Ignored for split=="test".
+        competition: cc or eta
+        counters_only: should the input tensor `x` only contain the loop counter nodes.
         """
         super().__init__()
         self.root: Path = root
@@ -86,14 +89,15 @@ class T4c22Dataset(torch.utils.data.Dataset):
             root=root,
             df_filter=partial(day_t_filter_to_df_filter, filter=day_t_filter) if self.day_t_filter is not None else None,
             skip_supersegments=self.competition == T4c22Competitions.CORE,
+            counters_only=counters_only,
         )
 
         # `day_t: List[Tuple[Y-m-d-str,int_0_96]]`
-        # TODO most days have even 96 (rolling window over midnight), but probably not necessary because of filtering we do.
         if split == "test":
             num_tests = load_inputs(basedir=self.root, split="test", city=city, day="test", df_filter=None)["test_idx"].max() + 1
             self.day_t = [("test", t) for t in range(num_tests)]
         else:
+            # TODO most days have even 96 (rolling window over midnight), but probably not necessary because of filtering we do.
             self.day_t = [(day, t) for day in cc_dates(self.root, city=city, split=self.split) for t in range(4, 96) if self.day_t_filter(day, t)]
 
     def __len__(self) -> int:

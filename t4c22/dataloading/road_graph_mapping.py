@@ -22,8 +22,9 @@ from t4c22.t4c22_config import load_road_graph
 
 
 class TorchRoadGraphMapping:
-    def __init__(self, city: str, root: Path, df_filter, edge_attributes=None, skip_supersegments: bool = True):
+    def __init__(self, city: str, root: Path, df_filter, edge_attributes=None, skip_supersegments: bool = True, counters_only: bool = False):
         self.df_filter = df_filter
+        self.counters_only = counters_only
 
         # load road graph
         df_edges, df_nodes, df_supersegments = load_road_graph(root, city, skip_supersegments=skip_supersegments)
@@ -33,38 +34,40 @@ class TorchRoadGraphMapping:
 
         # `edges: List[Tuple[ExternalNodeId,ExternalNodeId]]`
         self.edge_records = df_edges.to_dict("records")
-        edges = [(r["u"], r["v"]) for r in self.edge_records]
+        self.edges = [(r["u"], r["v"]) for r in self.edge_records]
 
         # `nodes: List[ExternalNodeId]`
-        nodes = [r["node_id"] for r in df_nodes.to_dict("records")]
+        self.noncounter_nodes = [r["node_id"] for r in df_nodes.to_dict("records") if r["counter_info"] == ""]
+        self.counter_nodes = [r["node_id"] for r in df_nodes.to_dict("records") if r["counter_info"] != ""]
+        self.nodes = self.counter_nodes + self.noncounter_nodes
 
         # enumerate nodes and edges and create mapping
         self.node_to_int_mapping = defaultdict(lambda: -1)
-        for i, k in enumerate(nodes):
+        for i, k in enumerate(self.nodes):
             self.node_to_int_mapping[k] = i
 
         # edge_index: Tensor of size (2,num_edges) of InternalNodeId
-        self.edge_index = torch.tensor([[self.node_to_int_mapping[n] for n, _ in edges], [self.node_to_int_mapping[n] for _, n in edges]], dtype=torch.long)
+        self.edge_index = torch.tensor(
+            [[self.node_to_int_mapping[n] for n, _ in self.edges], [self.node_to_int_mapping[n] for _, n in self.edges]], dtype=torch.long
+        )
 
         # edge_index_d: (ExternalNodeId,ExternalNodeId) -> InternalNodeId
         self.edge_index_d = defaultdict(lambda: -1)
-        self.edges = edges
-        self.nodes = nodes
-        for i, (u, v) in enumerate(edges):
+        for i, (u, v) in enumerate(self.edges):
             self.edge_index_d[(u, v)] = i
 
         # sanity checking edges and nodes are unique
-        assert len(edges) == len(set(edges)), (len(edges), len(set(edges)))
-        assert len(nodes) == len(set(nodes)), (len(nodes), len(set(nodes)))
+        assert len(self.edges) == len(set(self.edges)), (len(self.edges), len(set(self.edges)))
+        assert len(self.nodes) == len(set(self.nodes)), (len(self.nodes), len(set(self.nodes)))
 
         # sanity checking edge_index and edge_index_d size coincide with number of edges
         # beware, after accessing
-        assert len(self.edge_index_d) == len(edges), (len(self.edge_index_d), len(edges))
-        assert self.edge_index.size()[1] == len(edges), (self.edge_index.size()[1], len(edges))
+        assert len(self.edge_index_d) == len(self.edges), (len(self.edge_index_d), len(self.edges))
+        assert self.edge_index.size()[1] == len(self.edges), (self.edge_index.size()[1], len(self.edges))
         assert self.edge_index.size()[1] == len(self.edge_index_d), (self.edge_index.size()[1], len(self.edge_index_d))
 
         # sanity checking node_to_int_mapping has size number of nodes
-        assert len(self.node_to_int_mapping) == len(nodes), (len(self.node_to_int_mapping), len(nodes))
+        assert len(self.node_to_int_mapping) == len(self.nodes), (len(self.node_to_int_mapping), len(self.nodes))
 
         # edge_attr
         self.edge_attributes = edge_attributes
@@ -116,7 +119,7 @@ class TorchRoadGraphMapping:
         df_x["slot"] = df_x.index % 4
         df_x["volumes_1h"] = df_x["volumes_1h"].astype("float")
 
-        x = torch.full(size=(len(self.node_to_int_mapping), 4), fill_value=float("nan"))
+        x = torch.full(size=(len(self.counter_nodes) if self.counters_only else len(self.node_to_int_mapping), 4), fill_value=float("nan"))
 
         # (Mis-)use (day,t) for dataloading test sets where we do not exhibit day,t
         if day == "test":
@@ -128,6 +131,7 @@ class TorchRoadGraphMapping:
 
         # sanity check as defaultdict returns -1 for non-existing node_ids
         assert len(data[data["node_index"] < 0]) == 0
+
         x[data["node_index"].values, data["slot"].values] = torch.tensor(data["volumes_1h"].values).float()
         return x
 
