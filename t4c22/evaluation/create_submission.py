@@ -92,6 +92,7 @@ def create_submission_cc_torch_geometric(
     submission_name: str,
     basedir: Path,
     cities: Optional[List[str]] = None,
+    compression=zipfile.ZIP_DEFLATED,
 ):
     if cities is None:
         cities = CITIES
@@ -102,7 +103,7 @@ def create_submission_cc_torch_geometric(
         write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"cc_labels_test.parquet")
 
     submission_zip = basedir / "submission" / f"{submission_name}.zip"
-    with zipfile.ZipFile(submission_zip, "w") as z:
+    with zipfile.ZipFile(submission_zip, "w", compression=compression) as z:
         for city in cities:
             z.write(
                 filename=basedir / "submission" / submission_name / city / "labels" / f"cc_labels_test.parquet",
@@ -116,6 +117,7 @@ def create_submission_eta_torch_geometric(
     submission_name: str,
     basedir: Path,
     cities: Optional[List[str]] = None,
+    compression=zipfile.ZIP_DEFLATED,
 ):
     if cities is None:
         cities = CITIES
@@ -126,7 +128,7 @@ def create_submission_eta_torch_geometric(
         write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet")
 
     submission_zip = basedir / "submission" / f"{submission_name}.zip"
-    with zipfile.ZipFile(submission_zip, "w") as z:
+    with zipfile.ZipFile(submission_zip, "w", compression=compression) as z:
         for city in cities:
             z.write(
                 filename=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet",
@@ -136,7 +138,11 @@ def create_submission_eta_torch_geometric(
 
 
 def create_submission_cc_plain_torch(
-    config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]], submission_name: str, basedir: Path, cities: Optional[List[str]] = None
+    config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]],
+    submission_name: str,
+    basedir: Path,
+    cities: Optional[List[str]] = None,
+    compression=zipfile.ZIP_DEFLATED,
 ):
     if cities is None:
         cities = CITIES
@@ -148,7 +154,7 @@ def create_submission_cc_plain_torch(
         write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"cc_labels_test.parquet")
 
     submission_zip = basedir / "submission" / f"{submission_name}.zip"
-    with zipfile.ZipFile(submission_zip, "w") as z:
+    with zipfile.ZipFile(submission_zip, "w", compression=compression) as z:
         for city in cities:
             z.write(
                 filename=basedir / "submission" / submission_name / city / "labels" / f"cc_labels_test.parquet",
@@ -158,7 +164,11 @@ def create_submission_cc_plain_torch(
 
 
 def create_submission_eta_plain_torch(
-    config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]], submission_name: str, basedir: Path, cities: Optional[List[str]] = None
+    config: Dict[str, Tuple[T4c22Dataset, Callable[[Any], torch.Tensor]]],
+    submission_name: str,
+    basedir: Path,
+    cities: Optional[List[str]] = None,
+    compression=zipfile.ZIP_DEFLATED,
 ):
     if cities is None:
         cities = CITIES
@@ -170,7 +180,7 @@ def create_submission_eta_plain_torch(
         write_df_to_parquet(df=df_city, fn=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet")
 
     submission_zip = basedir / "submission" / f"{submission_name}.zip"
-    with zipfile.ZipFile(submission_zip, "w") as z:
+    with zipfile.ZipFile(submission_zip, "w", compression=compression) as z:
         for city in cities:
             z.write(
                 filename=basedir / "submission" / submission_name / city / "labels" / f"eta_labels_test.parquet",
