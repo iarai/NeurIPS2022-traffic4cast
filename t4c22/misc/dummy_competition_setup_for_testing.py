@@ -23,8 +23,9 @@ NUM_SLOTS_AGGREGATED = 4
 NUM_ROWS = 19
 NUM_COLUMNS = 17
 
-NUM_EDGES = 5
-NUM_NODES = 3
+NUM_EDGES = 6
+NUM_COUNTERS = 3
+NUM_NODES = 4
 NUM_SUPERSEGMENTS = 2
 
 
@@ -110,6 +111,19 @@ def create_dummy_competition_setup(  # noqa:C901
             "length_meters": 831.456,
             "counter_distance": 4,
         },
+        {
+            "u": 9824598274857,
+            "v": 89234759823745,
+            "parsed_maxspeed": 30.0,
+            "speed_kph": 30.0,
+            "importance": 1,
+            "highway": "residential",
+            "oneway": False,
+            "lanes": 1,
+            "tunnel": "",
+            "length_meters": 831.456,
+            "counter_distance": 4,
+        },
     ]
     assert len(edges) == NUM_EDGES, (len(edges), NUM_EDGES)
 
@@ -141,6 +155,13 @@ def create_dummy_competition_setup(  # noqa:C901
             "num_assigned": "1",
             "x": -3.48574895,
             "y": 40.9483728957,
+        },
+        {
+            "node_id": 89234759823745,
+            "counter_info": "",
+            "num_assigned": "",
+            "x": -3.4857,
+            "y": 40.48759874,
         },
     ]
     assert len(nodes) == NUM_NODES, (len(nodes), NUM_NODES)

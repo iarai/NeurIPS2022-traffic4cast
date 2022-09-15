@@ -319,7 +319,7 @@ def test_scorecomp_single_submission(caplog, args, expected_score_files, dummy_m
         (*competition_params, *job_params)
         for competition_params in [
             (T4c22Competitions.CORE, _create_dummy_competition_setup_with_model_class_submissions, 1.0986122, "cc_golden.zip", []),
-            (T4c22Competitions.EXTENDED, _create_dummy_competition_setup_with_arange_submissions, 26.97728157043457, "eta_golden.zip", ["-c", "eta"]),
+            (T4c22Competitions.EXTENDED, _create_dummy_competition_setup_with_arange_submissions, 30.116270065307617, "eta_golden.zip", ["-c", "eta"]),
         ]
         for job_params in [(1, 10, 2), (2, 10, 2), (4, 10, 2), (8, 10, 2)]
     ],
@@ -411,8 +411,7 @@ def test_unscored_from_folder(
             with score_file.open() as f:
                 content = f.read()
                 logging.info(content)
-
-                assert np.isclose(float(content), expected_score)
+                assert np.isclose(float(content), expected_score), (float(content), expected_score)
             log_file = submissions_dir / f"{submission_names[i]}.log"
             assert log_file.exists()
             with log_file.open() as f:

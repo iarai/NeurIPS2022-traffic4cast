@@ -29,23 +29,23 @@ from t4c22.misc.parquet_helpers import load_df_from_parquet
 
 
 @pytest.mark.parametrize(
-    "dataset_class,extractor,edge_attributes,use_cachedir",
+    "dataset_class,extractor,edge_attributes,use_cachedir,counters_only",
     [
-        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, True),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, False),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], True),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], False),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], True),
-        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], False),
-        (T4c22Dataset, lambda data: data, None, True),
-        (T4c22Dataset, lambda data: data, None, False),
-        (T4c22Dataset, lambda data: data, ["importance"], True),
-        (T4c22Dataset, lambda data: data, ["importance"], False),
-        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"], True),
-        (T4c22Dataset, lambda data: data, ["importance", "x_u", "x_v", "y_u", "y_v"], False),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, True, None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y), None, False, None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], True, None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance"], False, None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], True, None),
+        (T4c22GeometricDataset, lambda data: (data.x, data.y, data.edge_attr), ["importance", "x_u", "x_v", "y_u", "y_v"], False, None),
+        *[
+            (T4c22Dataset, lambda data: data, edge_attributes, use_cachedir, counters_only)
+            for edge_attributes in [None, ["importance"], ["importance", "x_u", "x_v", "y_u", "y_v"]]
+            for use_cachedir in [True, False]
+            for counters_only in [True, False]
+        ],
     ],
 )
-def test_T4c22Dataset(dataset_class, extractor, edge_attributes, use_cachedir):  # noqa:C901
+def test_T4c22Dataset(dataset_class, extractor, edge_attributes, use_cachedir, counters_only):  # noqa:C901
     city = "gotham"
     date = "1970-01-01"
     num_test_slots = 22
@@ -59,8 +59,10 @@ def test_T4c22Dataset(dataset_class, extractor, edge_attributes, use_cachedir): 
             create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots)
             if edge_attributes is not None and "x_u" in edge_attributes:
                 add_node_attributes_to_edges_parquet(basedir=basedir, city=city)
-
-            ds = dataset_class(root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=edge_attributes)
+            kwargs = {}
+            if counters_only is not None:
+                kwargs["counters_only"] = counters_only
+            ds = dataset_class(root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=edge_attributes, **kwargs)
             for idx, data in tqdm.tqdm(enumerate(ds), total=len(ds)):
                 if edge_attributes is None:
                     x, y = extractor(data)
