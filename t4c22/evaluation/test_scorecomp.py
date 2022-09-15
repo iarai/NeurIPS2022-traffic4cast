@@ -66,7 +66,7 @@ def _create_dummy_competition_setup_with_model_class_submissions(
     for submission_name in submission_names:
         create_submission_cc_plain_torch(config=config, basedir=basedir, submission_name=submission_name)
     golden_zip = basedir / "withheld" / "golden" / "cc_golden.zip"
-    with zipfile.ZipFile(golden_zip, "w") as z:
+    with zipfile.ZipFile(golden_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for city in cities:
             golden_file = basedir / "withheld" / "golden" / city / "labels" / f"cc_labels_test.parquet"
             z.write(golden_file, arcname=os.path.join(city, "labels", "cc_labels_test.parquet"))
@@ -101,7 +101,7 @@ def _create_dummy_competition_setup_with_random_submissions_for_cc(
     for submission_name in submission_names:
         create_submission_f(config=config, basedir=basedir, submission_name=submission_name)
     golden_zip = basedir / "withheld" / "golden" / "cc_golden.zip"
-    with zipfile.ZipFile(golden_zip, "w") as z:
+    with zipfile.ZipFile(golden_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for city in cities:
             golden_file = basedir / "withheld" / "golden" / city / "labels" / f"cc_labels_test.parquet"
             z.write(golden_file, arcname=os.path.join(city, "labels", "cc_labels_test.parquet"))
@@ -139,7 +139,7 @@ def _create_dummy_competition_setup_with_arange_submissions(
 
         create_submission_f(config=config, basedir=basedir, submission_name=submission_name)
     golden_zip = basedir / "withheld" / "golden" / "eta_golden.zip"
-    with zipfile.ZipFile(golden_zip, "w") as z:
+    with zipfile.ZipFile(golden_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
         for city in cities:
             golden_file = basedir / "withheld" / "golden" / city / "labels" / f"eta_labels_test.parquet"
             z.write(golden_file, arcname=os.path.join(city, "labels", "eta_labels_test.parquet"))
@@ -159,7 +159,7 @@ def test_evaluate_city_cc_parquet():
         golden_file = basedir / "withheld" / "golden" / city / "labels" / f"cc_labels_test.parquet"
         EXPECTED_NUM_ITEMS[T4c22Competitions.CORE.value][city] = NUM_EDGES * num_test_slots
         report, df = evaluate_city_cc_parquet(test_file=submission_file, golden_file=golden_file, city=city, participants_logger_name="bla")
-        with zipfile.ZipFile(basedir / "submission" / "cc_submision.zip", "w") as z:
+        with zipfile.ZipFile(basedir / "submission" / "cc_submision.zip", "w", compression=zipfile.ZIP_DEFLATED) as z:
             z.write(submission_file, arcname=os.path.join(city, "cc_labels_test.parquet"))
         print(report)
         print(df)
@@ -178,9 +178,9 @@ def test_scorecomp_fails_with_incomplete_submission():
 
         submission_zip = basedir / "submission" / "cc_submission.zip"
         golden_zip = basedir / "withheld" / "golden" / "cc_golden.zip"
-        with zipfile.ZipFile(submission_zip, "w") as z:
+        with zipfile.ZipFile(submission_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
             z.write(submission_file, arcname=os.path.join(city, "cc_labels_test.parquet"))
-        with zipfile.ZipFile(golden_zip, "w") as z:
+        with zipfile.ZipFile(golden_zip, "w", compression=zipfile.ZIP_DEFLATED) as z:
             z.write(golden_file, arcname=os.path.join(city, "cc_labels_test.parquet"))
 
         main(["-g", str(golden_zip), "-i", str(submission_zip)])
