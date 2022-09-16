@@ -73,9 +73,9 @@ class TorchRoadGraphMapping:
         self.edge_attributes = edge_attributes
         self.edge_attr = None
         if edge_attributes is not None:
-            self.edge_attr = torch.full(size=(len(self.edges), len(self.edge_attributes)), fill_value=float("nan"))
+            self.edge_attr = torch.full(size=(len(self.edges), len(self.edge_attributes)), fill_value=float("nan"), dtype=torch.float64)
+            assert len(self.edges) == len(self.edge_records)
             for i, edge in enumerate(self.edge_records):
-
                 for j, attr in enumerate(edge_attributes):
                     self.edge_attr[i, j] = edge[attr]
 
