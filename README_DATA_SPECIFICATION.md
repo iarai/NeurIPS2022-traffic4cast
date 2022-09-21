@@ -25,8 +25,8 @@
 | x   | node_id | 78112 | int64 | OSM ID                                           |
 |     | counter_info | ['17/116']                                                                 | list<item: string> | List of loop counter IDs in this node, referring to the city-specific sources.                                                     |
 |     | num_assigned | ['1']                                                                      | list<item: string> | number of road graph nodes this counter belongs to. This is only used  for large junctions in Melbourne where a single counter value is associated with multiple road graph nodes      |
-|     | x | -0.1457924 | double | latitude                                         |
-|     | y | 51.526976 | double | longitude                                        |
+|     | x | -0.1457924 | double | longitude                                         |
+|     | y | 51.526976 | double | latitude                                        |
 
 ### `road_graph/london/road_graph_supersegments.parquet`
 
@@ -125,7 +125,6 @@
 
 ### `test/london/input/counters_test.parquet` (core competition: congestion classes (cc) and extended competition (eta))
 
-TODO finalize.
 We use the same situations for core (`cc`) and extended (`eta`) competitions!
 
 | Key | Attribute     | Example      | Data Type | Description                                                    |
