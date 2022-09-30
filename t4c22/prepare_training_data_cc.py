@@ -37,12 +37,15 @@ Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
                         Folder containing T4c data
   -r, --resume          Resume processing without regenerating existing files
+  -c city_name, --city city_name
+                        Name of the city to be processed. Defaults to `-c london -c madrid -c melbourne`
 """
 import argparse
 import logging
 import os
 import sys
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -69,13 +72,23 @@ def compute_cc_defensive(median_speed_kph, freeflow_speed_kph, probe_volume):
         return 0
     assert freeflow_speed_kph > 0, (median_speed_kph, freeflow_speed_kph, probe_volume)
     congestion_factor = median_speed_kph / freeflow_speed_kph
-    if congestion_factor < 0.4 and probe_volume >= 5:
-        return 3
-    elif congestion_factor >= 0.4 and congestion_factor < 0.8 and probe_volume >= 3:
-        return 2
-    elif congestion_factor >= 0.8 and probe_volume > 0:
-        return 1
+    if congestion_factor < 0.4:
+        if probe_volume >= 5:
+            return 3
+        else:
+            return 0
+    elif congestion_factor >= 0.4 and congestion_factor < 0.8:
+        if probe_volume >= 3:
+            return 2
+        else:
+            return 0
+    elif congestion_factor >= 0.8:
+        if probe_volume > 0:
+            return 1
+        else:
+            return 0
     else:
+        # will never happen
         return 0
 
 
@@ -90,6 +103,10 @@ def generate_cc_labels(city, in_folder, out_folder, road_graph_folder: Path, res
     edges_file = road_graph_folder / city / "road_graph_edges.parquet"
     edges_df = pd.read_parquet(edges_file)
     print(f"Read {len(edges_df)} edges")
+    speed_limit_field = "speed_kph"
+    if city == "madrid" and "parsed_maxspeed" in edges_df.columns:
+        # The OSM speed_kph field in Madrid has parsing errors, let's use our own parsed version
+        speed_limit_field = "parsed_maxspeed"
     cc_count = 0
     sc_files = sorted((in_folder / city).glob("speed_classes_*.parquet"))
     existing_dates = []
@@ -98,16 +115,12 @@ def generate_cc_labels(city, in_folder, out_folder, road_graph_folder: Path, res
     for i, sc_parquet in enumerate(sc_files):
         day = str(sc_parquet).split("_")[-1][:-8]
         if resume and day in existing_dates:
-            print(f"cc_labels_{day}.parquet exist already ... skipping")
+            print(f"cc_labels_{day}.parquet exists already ... skipping")
             continue
         print(f"Processing labels file {i}/{len(sc_files)}")
         sc_df = pd.read_parquet(sc_parquet)
         print(f"Read {len(sc_df)} rows from {sc_parquet}")
         cc_df = sc_df.merge(edges_df, on=["u", "v"])
-        speed_limit_field = "speed_kph"
-        if city == "madrid":
-            # The OSM speed_kph field in Madrid has parsing errors, let's use our own parsed version
-            speed_limit_field = "parsed_maxspeed"
         cc_df["cc"] = [
             compute_cc(ms, ff, sl, vc)
             for ms, ff, sl, vc in zip(cc_df["median_speed_kph"], cc_df["free_flow_kph"], cc_df[speed_limit_field], cc_df["volume_class"])
@@ -127,9 +140,9 @@ def generate_cc_labels(city, in_folder, out_folder, road_graph_folder: Path, res
         print(f" Total rows: {cc_count}\n\n")
 
 
-def generate_training_labels(data_folder: Path, resume):
+def generate_training_labels(data_folder: Path, resume, cities: List[str]):
     print(f"Processing label data in {data_folder}")
-    for city in ["london", "madrid", "melbourne"]:
+    for city in cities:
         data_folder_train_city_labels = data_folder / "train" / city / "labels"
         data_folder_train_city_labels.mkdir(exist_ok=True, parents=True)
         generate_cc_labels(
@@ -151,6 +164,7 @@ def create_parser() -> argparse.ArgumentParser:
         required=True,
     )
     parser.add_argument("-r", "--resume", help="Resume processing without regenerating existing files", required=False, action="store_true")
+    parser.add_argument("--city", type=str, help="Competition", required=False, default=["london", "madrid", "melbourne"], nargs="+")
     return parser
 
 
@@ -164,7 +178,8 @@ def main(argv):
         params = vars(params)
         data_folder = Path(params["data_folder"])
         resume = params["resume"]
-        generate_training_labels(data_folder, resume)
+        cities = params["city"]
+        generate_training_labels(data_folder, resume, cities)
     except Exception as e:
         logging.exception(f"Could not parse args.", exc_info=e)
         parser.print_help()

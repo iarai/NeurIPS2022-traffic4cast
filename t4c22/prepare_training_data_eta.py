@@ -225,7 +225,7 @@ def generate_eta_labels(city, in_folder, out_folder, road_graph_folder: Path, re
     for i, sc_parquet in enumerate(sc_files):
         day = str(sc_parquet).split("_")[-1][:-8]
         if resume and day in existing_dates:
-            print(f"eta_labels_{day}.parquet exist already ... skipping")
+            print(f"eta_labels_{day}.parquet exists already ... skipping")
             continue
         debug = False
         if debug_list:

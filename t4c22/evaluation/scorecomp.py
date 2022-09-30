@@ -22,6 +22,7 @@ import datetime
 import glob
 import json
 import logging
+import multiprocessing
 import os
 import sys
 import tempfile
@@ -29,7 +30,6 @@ import time
 import zipfile
 from enum import Enum
 from functools import partial
-from multiprocessing import Pool
 from pathlib import Path
 from typing import Dict
 from typing import List
@@ -285,18 +285,26 @@ def do_score(ground_truth_archive: str, input_archive: str, participants_logger_
     return score, scores_dict
 
 
-def score_participant(input_archive: str, ground_truth_archive: str, competition: T4c22Competitions):
+def score_participant(
+    input_archive: str, ground_truth_archive: str, competition: T4c22Competitions, expected_num_items_inject_from_main_to_jobs_for_true_multiprocessing=None
+):
+    # important if processes are spawned! Otherwise, log level not initialized correctly and only errors written to the log files...
+    logging.basicConfig(
+        level=os.environ.get("LOGLEVEL", "INFO"), format="[%(asctime)s][%(levelname)s][%(process)d][%(filename)s:%(funcName)s:%(lineno)d] %(message)s"
+    )
     submission_id = os.path.basename(input_archive).replace(".zip", "")
 
-    full_handler = logging.FileHandler(input_archive.replace(".zip", "-full.log"))
-    json_score_file = input_archive.replace(".zip", ".score.json")
+    full_handler_file = input_archive.replace(".zip", "-full.log")
+    full_handler = logging.FileHandler(full_handler_file)
+
     full_handler.setLevel(logging.INFO)
     full_handler.setFormatter(logging.Formatter("[%(asctime)s][%(levelname)s]%(message)s"))
     full_logger = logging.getLogger()
     full_logger.addHandler(full_handler)
 
     # create the log and score files with bad score in case an exception happens
-    participants_handler = logging.FileHandler(input_archive.replace(".zip", ".log"))
+    participants_handler_file = input_archive.replace(".zip", ".log")
+    participants_handler = logging.FileHandler(participants_handler_file)
     participants_handler.setLevel(logging.INFO)
     participants_handler.setFormatter(logging.Formatter("[%(asctime)s][%(levelname)s]%(message)s"))
     participants_logger_name = f"participants-{submission_id}"
@@ -306,12 +314,20 @@ def score_participant(input_archive: str, ground_truth_archive: str, competition
     participants_logger.info(f"start scoring of {input_archive_basename}")
     participants_logger.addHandler(full_handler)
 
+    json_score_file = input_archive.replace(".zip", ".score.json")
     score_file_extensions = SCOREFILE_CONFIG[competition]
     for score_file_ext in score_file_extensions:
         score_file = input_archive.replace(".zip", score_file_ext)
         with open(score_file, "w") as f:
             f.write("999")
     try:
+
+        if expected_num_items_inject_from_main_to_jobs_for_true_multiprocessing is not None:
+            global EXPECTED_NUM_ITEMS
+            # reset as passed from main to process pool
+            print(f"applying injected {expected_num_items_inject_from_main_to_jobs_for_true_multiprocessing} instead of {EXPECTED_NUM_ITEMS}")
+            EXPECTED_NUM_ITEMS = expected_num_items_inject_from_main_to_jobs_for_true_multiprocessing
+
         # do scoring and update score file
         vanilla_score, scores_dict = do_score(
             input_archive=input_archive, ground_truth_archive=ground_truth_archive, participants_logger_name=participants_logger_name, competition=competition
@@ -343,12 +359,28 @@ def score_unscored_participants(ground_truth_archive, jobs, submissions_folder, 
     all_submissions = [z.replace(".zip", "") for z in glob.glob(f"{submissions_folder}/*.zip")]
     unscored = [s for s in all_submissions if not os.path.exists(os.path.join(submissions_folder, f"{s}.score"))]
     unscored_zips = [os.path.join(submissions_folder, f"{s}.zip") for s in unscored]
+
     if jobs == 0:
         for u in unscored_zips:
-            score_participant(u, ground_truth_archive=ground_truth_archive, competition=competition)
+            score_participant(
+                u,
+                ground_truth_archive=ground_truth_archive,
+                competition=competition,
+            )
     else:
-        with Pool(processes=jobs) as pool:
-            _ = list(pool.imap_unordered(partial(score_participant, ground_truth_archive=ground_truth_archive, competition=competition), unscored_zips))
+        # 'spawn' only method available on all platforms: https://docs.python.org/3/library/multiprocessing.html#contexts-and-start-methods
+        with multiprocessing.get_context("spawn").Pool(processes=jobs) as pool:
+            _ = list(
+                pool.imap_unordered(
+                    partial(
+                        score_participant,
+                        ground_truth_archive=ground_truth_archive,
+                        competition=competition,
+                        expected_num_items_inject_from_main_to_jobs_for_true_multiprocessing=EXPECTED_NUM_ITEMS,
+                    ),
+                    unscored_zips,
+                )
+            )
 
 
 def create_parser() -> argparse.ArgumentParser:
