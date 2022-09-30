@@ -3,7 +3,8 @@ stages:
   - test
 
 unit-tests:
-  tags: [ docker ]
+  # TODO get to run on gpu runners
+  tags: [ docker, cpu ]
   stage: test
   image: $CI_REGISTRY_IMAGE:master
   script:

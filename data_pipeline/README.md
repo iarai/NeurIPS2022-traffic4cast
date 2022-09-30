@@ -1,6 +1,8 @@
 # Traffic4cast 2022 Data Pipeline
 
-We will publish the code to generate the speed classifications from the traffic movies later in this sub-folder.
+This sub-folder describes the data pipeline for Traffic4cast 2022 both for the loop counter node data and for the
+edge speed classification data. The major parts of the speed classification pipeline are provided as a series of scripts
+that allow to generate a road graph and derive speed classifications from available traffic movies end-to-end.
 
 ### Color Scheme
 <img src="../img/data_pipeline_color_scheme.svg">
@@ -31,7 +33,7 @@ We will publish the code to generate the speed classifications from the traffic 
 
 
 
-## Data Pipeline Edge Data: Congestion Classes from GPS Speeds
+## Data Pipeline Edge Data: Congestion Classes from Traffic4cast Traffic Map Movies
 <img src="../img/data_pipeline_edge_data.svg">
 
 
@@ -41,3 +43,80 @@ We will publish the code to generate the speed classifications from the traffic 
 | Spatial Join       | Intersect OSM roads geometries with map movie cell geometries. |
 | Combination        | Combine Traffic Map values with OSM IDs. |
 | Generate CC Labels | Generate congestion classes (green=1, yellow=2, red=3) from the current segment medium speeds, the free flow speeds computed for the segment from the traffic map movies and the OSM signalled speeds. If no or not enough dynamic speed data is available, do not classify (unclassified=0). |
+
+
+## Data Pipeline Edge Data: Speed Classes from Traffic4cast Traffic Map Movies
+
+
+The scripts dp*.py in this sub-folder provide a fully-functional end-to-end way to derive a road graph with
+speed classifications from available Traffic4cast traffic map movies as they can be downloaded from https://developer.here.com/sample-data
+
+The scripts are numbered (dp01-06) in the order of their execution and dependency upon previous outputs.
+
+The following diagram shows the excution dependencies and artifacts of these scripts.
+
+<img src="../img/data_pipeline_scripts.svg">
+
+
+### 15 minute movie aggregation (`dp01_movie_aggregation.py`)
+
+The traffic map movie data from the Traffic4cast competitions 2020, 2021 and 2022 as provided on https://developer.here.com/sample-data
+is aggregated in 5 minute bins. In order to be able to compute speed classifications in 15 minute bins this data needs
+to be aggregated.
+
+Prior to starting you should have downloaded and extracted the ZIP file for the city of interest from https://developer.here.com/sample-data
+The files from the 2022 competition (LONDON_2022.zip, MADRID_2022.zip, MELBOURNE_2022.zip) will automatically extract into the
+expected sub-folder structure in the data folder, e.g.
+```
+└── movie
+    ├── london
+    ├── madrid
+    └── melbourne
+```
+For the downloads from the older competitions you might have to copy the extracted data into the appropriate sub-folder.
+
+The output will be written to a newly created subfolder `movie_15min` inside the data folder.
+
+
+### Speed clusters (`dp02_speed_clusters.py`)
+
+The generation of congestion class labels (`t4c22/prepare_training_data_cc.py`) uses both the actual speed, and the
+typical free flow speed for the road segment as input. The free flow is derived from the highest dominant speed on the
+given road segment (see `dp05_free_flow.py`).
+
+This step computes the 5 most dominant speeds clusters for every cell and heading in the aggregated 15 minute traffic
+map movies. By default, all speed values from 20 days of data are clustered using the K-means clustering
+algorithm for every cell/heading combination (495x436x4 = ~860K). Hence, this process is computationally expensive
+and can easily take 2-3 hours per city.
+
+Prior to starting you should have generated the 15 minute movie aggregates using the script `dp01_movie_aggregation.py`.
+
+The script expects a subfolder `movie_15min/<city>` in the passed data_folder. The output will be written to a newly
+created subfolder `movie_speed_clusters` inside the data folder.
+
+
+### Road graph (`dp03_road_graph.py`)
+TODO
+
+
+### Intersecting cells (`dp04_intersecting_cells.py`)
+TODO
+
+
+### Free flow speeds (`dp05_free_flow.py`)
+TODO
+
+
+### Speed classification (`dp06_speed_classes.py`)
+TODO
+```
+The script needs the following three folders in <data_folder>
+├── road_graph
+│   ├── london
+│   ├── madrid
+│   └── melbourne
+└── movie_15min
+    ├── london
+    ├── madrid
+    └── melbourne
+```

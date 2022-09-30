@@ -12,13 +12,14 @@
 from pathlib import Path
 
 import pandas
+import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
 
 # -
 
 
-def load_df_from_parquet(fn: Path):
+def load_df_from_parquet(fn: Path) -> pd.DataFrame:
     return pq.read_table(fn).to_pandas()
 
 

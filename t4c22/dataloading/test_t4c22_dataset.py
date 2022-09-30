@@ -143,7 +143,7 @@ def test_T4c22Dataset_Extended(dataset_class, extractor, edge_attributes, use_ca
             if not use_cachedir:
                 cachedir = None
 
-            create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots)
+            create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_supersegments=False)
 
             ds = dataset_class(
                 root=basedir, city=city, split="train", cachedir=cachedir, edge_attributes=edge_attributes, competition=T4c22Competitions.EXTENDED

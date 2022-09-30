@@ -352,7 +352,7 @@ def test_create_submission_eta_plain_torch():
         config = {}
         for city in cities:
             create_dummy_competition_setup(
-                basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_golden=True, skip_submission=True
+                basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_golden=True, skip_submission=True, skip_supersegments=False
             )
 
             test_dataset = T4c22Dataset(root=basedir, city=city, split="test", competition=T4c22Competitions.EXTENDED)

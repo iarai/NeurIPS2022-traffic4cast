@@ -54,7 +54,9 @@ def _create_dummy_competition_setup_with_model_class_submissions(
 ):
     config = {}
     for city in cities:
-        create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_golden=False, skip_submission=False)
+        create_dummy_competition_setup(
+            basedir=basedir, city=city, train_dates=[date], num_test_slots=num_test_slots, skip_golden=False, skip_submission=False, skip_supersegments=False
+        )
         device = f"cuda" if torch.cuda.is_available() else "cpu"
         device = torch.device(device)
 
@@ -123,7 +125,7 @@ def _create_dummy_competition_setup_with_arange_submissions(
 ):
     config = {}
     for city in cities:
-        create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[], num_test_slots=num_test_slots)
+        create_dummy_competition_setup(basedir=basedir, city=city, train_dates=[], num_test_slots=num_test_slots, skip_supersegments=False)
 
         device = f"cuda" if torch.cuda.is_available() else "cpu"
         device = torch.device(device)
@@ -318,15 +320,15 @@ def test_scorecomp_single_submission(caplog, args, expected_score_files, dummy_m
     [
         (*competition_params, *job_params)
         for competition_params in [
-            (T4c22Competitions.CORE, _create_dummy_competition_setup_with_model_class_submissions, 1.0986122, "cc_golden.zip", []),
-            (T4c22Competitions.EXTENDED, _create_dummy_competition_setup_with_arange_submissions, 30.116270065307617, "eta_golden.zip", ["-c", "eta"]),
+            ("cc", _create_dummy_competition_setup_with_model_class_submissions, 1.0986122, "cc_golden.zip", []),
+            ("eta", _create_dummy_competition_setup_with_arange_submissions, 30.017200469970703, "eta_golden.zip", ["-c", "eta"]),
         ]
         for job_params in [(1, 10, 2), (2, 10, 2), (4, 10, 2), (8, 10, 2)]
     ],
 )
 def test_unscored_from_folder(
     caplog,
-    competition: T4c22Competitions,
+    competition: str,
     setup,
     expected_score,
     golden_name,
@@ -366,9 +368,9 @@ def test_unscored_from_folder(
 
         print("start scoring")
         for city in cities:
-            EXPECTED_NUM_ITEMS[competition.value][city] = (
-                num_test_slots * {T4c22Competitions.CORE: NUM_EDGES, T4c22Competitions.EXTENDED: NUM_SUPERSEGMENTS}[competition]
-            )
+            for any_competition in ["cc", "eta"]:
+                EXPECTED_NUM_ITEMS[any_competition][city] = num_test_slots * {"cc": NUM_EDGES, "eta": NUM_SUPERSEGMENTS}[any_competition]
+        print(f"tweaking EXPECTED_NUM_ITEMS={EXPECTED_NUM_ITEMS}")
         start = time.time()
         main(["-g", str(golden_zip), "-s", str(submissions_dir), "-j", str(jobs)] + score_args)
         end = time.time()
