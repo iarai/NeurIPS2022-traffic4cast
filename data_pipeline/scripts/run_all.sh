@@ -183,9 +183,9 @@ python ${PIPELINE_ROOT}/../t4c22/prepare_training_data_cc.py -d ${DATA_ROOT}/202
 python ${PIPELINE_ROOT}/../t4c22/prepare_training_data_cc.py -d ${DATA_ROOT}/2022 --city madrid
 python ${PIPELINE_ROOT}/../t4c22/prepare_training_data_cc.py -d ${DATA_ROOT}/2022 --city melbourne
 
-ls -a ${DATA_ROOT}/2020/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2020/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2020/train/labels/{} | wc -l"
-ls -a ${DATA_ROOT}/2021/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2021/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2021/train/labels/{} | wc -l"
-ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2022/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2022/train/labels/{} | wc -l"
+ls -a ${DATA_ROOT}/2020/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2020/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2020/train/{}/labels | wc -l"
+ls -a ${DATA_ROOT}/2021/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2021/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2021/train/{}/labels | wc -l"
+ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2022/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2022/train/{}/labels | wc -l"
 
 ## dp05 -> per city
 #
@@ -225,6 +225,6 @@ ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "
 #ls -a ${DATA_ROOT}/2021/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2021/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2021/speed_classes/{} | wc -l"
 #ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2022/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2022/speed_classes/{} | wc -l"
 #
-#ls -a ${DATA_ROOT}/2020/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2020/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2020/train/labels/{} | wc -l"
-#ls -a ${DATA_ROOT}/2021/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2021/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2021/train/labels/{} | wc -l"
-#ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2022/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2022/train/labels/{} | wc -l"
+#ls -a ${DATA_ROOT}/2020/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2020/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2020/train/{}/labels | wc -l"
+#ls -a ${DATA_ROOT}/2021/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2021/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2021/train/{}/labels | wc -l"
+#ls -a ${DATA_ROOT}/2022/movie_15min | grep -v '\.' | xargs -I {} -exec bash -c "echo '------'; echo {}; echo '------'; ls ${DATA_ROOT}/2022/movie_15min/{} | wc -l; ls ${DATA_ROOT}/2022/train/{}/labels | wc -l"
