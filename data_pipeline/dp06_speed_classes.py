@@ -25,8 +25,7 @@ Usage:
 
 Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
-                        Folder containing a subfolder road_graph/<city> with
-                        road_graph_edges.parquet and road_graph_geometries.parquet
+                        Folder containing a subfolder road_graph/<city> with `road_graph_freeflow.parquet
   -c city_name, --city city_name
                         Name of the city to be processed
   -dffn, --disable_free_flow_normalization

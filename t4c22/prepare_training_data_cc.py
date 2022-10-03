@@ -101,9 +101,14 @@ def generate_cc_labels(city, in_folder, out_folder, road_graph_folder: Path, res
     out_folder_city_labels = out_folder / city / "labels"
     print(f"Provisioning training output data to {out_folder_city_labels}")
     edges_file = road_graph_folder / city / "road_graph_edges.parquet"
+    free_flow_file = road_graph_folder / city / "road_graph_freeflow.parquet"
     edges_df = pd.read_parquet(edges_file)
+    # compatibility between t4c22 data and data_pipeline: road_graph_edges.parquet does not contain gkey yet...
+    if free_flow_file.exists():
+        edges_df = pd.read_parquet(free_flow_file)
     print(f"Read {len(edges_df)} edges")
     speed_limit_field = "speed_kph"
+    # compatibility between t4c22 data and data_pipeline: parsed_maxspeed not in data_pipeline any more
     if city == "madrid" and "parsed_maxspeed" in edges_df.columns:
         # The OSM speed_kph field in Madrid has parsing errors, let's use our own parsed version
         speed_limit_field = "parsed_maxspeed"
@@ -120,17 +125,21 @@ def generate_cc_labels(city, in_folder, out_folder, road_graph_folder: Path, res
         print(f"Processing labels file {i}/{len(sc_files)}")
         sc_df = pd.read_parquet(sc_parquet)
         print(f"Read {len(sc_df)} rows from {sc_parquet}")
-        cc_df = sc_df.merge(edges_df, on=["u", "v"])
+        segment_key_columns = ["u", "v"]
+        # compatibility between t4c22 data and data_pipeline: gkey only in data_pipeline
+        if "gkey" in edges_df.columns:
+            segment_key_columns = ["u", "v", "gkey"]
+        cc_df = sc_df.merge(edges_df, on=segment_key_columns, suffixes=("", "_road_graph_freeflow"))
         cc_df["cc"] = [
             compute_cc(ms, ff, sl, vc)
             for ms, ff, sl, vc in zip(cc_df["median_speed_kph"], cc_df["free_flow_kph"], cc_df[speed_limit_field], cc_df["volume_class"])
         ]
         cc_df = cc_df.reset_index()
-        cc_df = cc_df[["u", "v", "day", "t", "cc"]]
+        cc_df = cc_df[segment_key_columns + ["day", "t", "cc"]]
         cc_df = cc_df[cc_df["cc"] > 0]
         cc_count += len(cc_df)
         print(f' Congestion classes: {dict(cc_df[["cc"]].groupby(["cc"]).size())}')
-        print(f' Segments: {len(cc_df.groupby(["u","v"]).count())}')
+        print(f" Segments: {len(cc_df.groupby(segment_key_columns).count())}")
         output_parquet = out_folder_city_labels / f"cc_labels_{day}.parquet"
         cc_df.to_parquet(output_parquet, compression="snappy")
         print(f"Wrote labels to {output_parquet}")
