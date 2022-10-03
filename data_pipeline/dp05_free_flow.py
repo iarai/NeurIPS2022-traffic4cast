@@ -24,7 +24,7 @@ and extracted the existing files from the Traffic4cast competition ZIP files:
 
 The script expects a subfolder `road_graph/<city>` in the passed data_folder.
 
-The output file `road_graph_freeflow.parquet` will be written to `road_graph/<city>`.
+The output files `road_graph_freeflow.parquet` and `road_graph_freeflow.gpkg` will be written to `road_graph/<city>`.
 
 Usage:
   dp05_free_flow.py [-h] -d DATA_FOLDER -c CITY [-sl] [-f]
@@ -32,7 +32,7 @@ Usage:
 Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
                         Folder containing a subfolder road_graph/<city> with
-                        road_graph_edges.parquet and road_graph_geometries.parquet
+                        road_graph_intersecting_cells.parquet
   -c city_name, --city city_name
                         Name of the city to be processed
   -sl, --use_speed_limit

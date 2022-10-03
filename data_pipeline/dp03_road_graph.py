@@ -12,21 +12,24 @@
 
 This script generates a basic road graph using source data from OSM.
 
-The output file `cell_mapping.parquet` will be written to `road_graph/<city>`.
+The output files `road_graph_nodes.parquet`, `road_graph_edges.parquet`, `road_graph.gpkg` and `road_graph.graphml` will be written to `road_graph/<city>`.
 
 Usage:
   dp03_road_graph.py [-h] -d DATA_FOLDER -c CITY [-r]
 
 Arguments:
   -d DATA_FOLDER, --data_folder DATA_FOLDER
-                        Folder containing a subfolder road_graph/<city> with
-                        road_graph_edges.parquet and road_graph_geometries.parquet
+                        Folder containing a subfolders road_graph/<city>
   -c city_name, --city city_name
                         Name of the city to be processed
   -cf filter_string, --custom_filter filter_string
                         Optional custom OSM filter string
   -pms, --parse_maxspeed
                         Use the improved maxspeed parsing logic instead of the default OSMNX one
+                            parser.add_argument(
+    -kae, --keep_all_edges
+                        Disable simplification to keep all OSM segments as individual edges in the graph
+    )
   -f, --force_overwrite
                         Force re-processing and overwriting existing cell mapping files
 """
@@ -166,7 +169,7 @@ def create_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("-pms", "--parse_maxspeed", help="Parse the maxspeed string field with the improved logic", required=False, action="store_true")
     parser.add_argument(
-        "-kae", "--keep_all_edges", help="Diable simplification to keep all OSM segments as individual edges in the graph", required=False, action="store_true"
+        "-kae", "--keep_all_edges", help="Disable simplification to keep all OSM segments as individual edges in the graph", required=False, action="store_true"
     )
     parser.add_argument("-f", "--force_overwrite", help="Force overwriting existing files", required=False, action="store_true")
     return parser
