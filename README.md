@@ -20,9 +20,9 @@
 * 27nd July 2022: training data and code for **Core Challenge** available (see https://www.iarai.ac.at/traffic4cast/challenge/)
 * 19th August 2022: test set release and leaderboard opens for **Core Challenge**
 * 2nd September 2022: code available, test set release and leaderboard opens for **Extended Challenge**
-* 15th of October 2022: Submission to Traffic4cast 2022 leaderboard deadline
-* 21st of October 2022: Abstract submission deadline
-* 5th November 2022: announcement of the winners
+* **24th** ~15th~ of **October 2022 11:59am CEST**: **Submission** to Traffic4cast 2022 leaderboard deadline
+* **31st** ~21st~ of **October 2022 11:59am CET**: **Abstract** submission deadline
+* **5th November 2022**: announcement of the **winners**
 
 ## TL;DR
 
