@@ -57,4 +57,4 @@ the recurring patterns as coming from the hourly historical are already a good g
 to see how much more information models are able to encode and extract from the vehicle count data.
 ![supersegments_stats](media/eta_daylines.png)
 
-The code used to produce this figure can be found [exploration/eta_exploration.ipynb](https://github.com/iarai/NeurIPS2022-traffic4cast/tree/main/exploration/eta_exploration.ipynb) and [exploration/historic_distribution.py](https://github.com/iarai/NeurIPS2022-traffic4cast/tree/main/exploration/historic_distribution.py).
+The code used to produce this figure can be found [exploration/eta_exploration_historic.ipynb](https://github.com/iarai/NeurIPS2022-traffic4cast/tree/main/exploration/eta_exploration_historic.ipynb) and [exploration/historic_distribution.py](https://github.com/iarai/NeurIPS2022-traffic4cast/tree/main/exploration/historic_distribution.py).
