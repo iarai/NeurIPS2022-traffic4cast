@@ -45,7 +45,7 @@ the problem, e.g. if you generate your own training and validation sets, data fi
 In order to compare the different approaches of the different solutions in the competition, we would like to see a table like the following (see Table 1,
 Section 3 of https://proceedings.mlr.press/v176/eichenberger22a/eichenberger22a.pdf):
 
-| model (checkpoint)            | architecture | fine-tuning/freezing           | sampling                         | size training set | training data                                     | number of iterations | batch size | trainable parameters / model size | optimizer and schedule | 
+| model (checkpoint)            | architecture | fine-tuning/freezing           | sampling                         | size training set | training data                                     | number of iterations | batch size | trainable parameters / model size | optimizer and schedule |
 |-------------------------------|--------------|--------------------------------|----------------------------------|-------------------|---------------------------------------------------|----------------------|------------|-----------------------------------|------------------------|
 | fancy_small_baseline&lt;city> | fancy_small  | --                             | 20 days per &lt;city>, whole day | 20 * 96           | e.g. (4,10) tensor per node, (4,) tensor per edge | 50 epochs            | 1          | 1.2K                              | AdamA                  |
 | fancy_big                     | fancy_big    | --                             | 20 days per city, whole day      | 3 * 20 * 96       | e.g. (4,10) tensor per node, (4,) tensor per edge | 50 epochs            | 2          | 1.2M                              | AdamB                  |
