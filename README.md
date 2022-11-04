@@ -16,6 +16,44 @@
 ## About
 [This repo](https://github.com/iarai/NeurIPS2022-traffic4cast) contains all information about the Traffic4cast 2022 NeurIPS competition for participants. It contains detailed information about the competition and data as well as code and [issue tracker](https://github.com/iarai/NeurIPS2022-traffic4cast/issues).
 
+## Leaderboard
+
+### Core competition
+
+| Score (Weighted Cross-Entropy cc)    | Team         |
+|--------------|--------------|
+| 0.8431079388 | ustc-gobbler |
+| 0.8496679068 | Bolt         |
+| 0.8504153291 | oahciy       |
+| 0.8560309211 | GongLab      |
+| 0.8736550411 | TSE          |
+| 0.8759126862 | discovery    |
+| 0.8778917591 | ywei         |
+
+### Extended competition
+
+| Score (L1 eta) | Team         |
+|----------------|--------------|
+| 58.49972153    | ustc-gobbler |
+| 59.78244781    | TSE          |
+| 61.22274017    | oahciy       |
+| 61.2546107     | Bolt         |
+| 62.29674403    | discovery    |
+| 64.74489975    | GongLab      |
+
+### Teams
+
+| Team         | Members                                               | Paper, code checkpoints                                                                                                                                                                                                                                                                                                                                         |
+|--------------|-------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ustc-gobbler | Leyan Deng, Chenwang Wu, Defu Lian and Min Zhou       | [Transposed Variational Auto-encoder with Intrinsic Feature Learning for Traffic Forecasting](https://arxiv.org/pdf/2211.00641.pdf) / [code](https://github.com/Daftstone/Traffic4cast)  / [checkpoints](https://drive.google.com/drive/folders/1IPS8awH8Htmt9hGMa-cE6lwoJg60ttaC)                                                                              |
+| Bolt         | Martin Lumiste and Andrei Ilie                        | [Large scale traffic forecasting with gradient boosting](https://arxiv.org/abs/2211.00157)  / [code](https://github.com/skandium/t4c22)  / [checkpoints](https://github.com/skandium/t4c22)                                                                                                                                                                     |
+| TSE          | Xinhua Wu, Cheng Lyu, Qing-Long Lu and Vishal Mahajan | [SIMILARITY-BASED FEATURE EXTRACTION FOR LARGE-SCALE SPARSE TRAFFIC FORECASTING](https://github.com/c-lyu/Traffic4Cast2022-TSE/blob/main/Traffic4cast_2022_TSE.pdf)   / [code](https://github.com/c-lyu/Traffic4Cast2022-TSE)  / [checkpoints](https://github.com/c-lyu/Traffic4Cast2022-TSE/tree/main/processed/checkpoints)                                   |
+| oahciy       | Yichao Lu                                             | An Efficient Two-stage Gradient Boosting Framework for Short-term Traffic State Estimation   / [code](https://github.com/YichaoLu/Traffic4cast2022)  / [checkpoints](https://drive.google.com/file/d/1N3bhlPJuLjW-gTwZ3K1Gjt75yrw12YnU/view?usp=sharing)  / [checkpoints](https://drive.google.com/file/d/11mgqA4dfwvxpwsq0b59tjBmQzOBd0Rre/view?usp=sharing) |
+| GongLab      | Jiezhang Li, Junjun Li and Yue-Jiao Gong              | MULTI-TASK LEARNING FOR SPARSE TRAFFIC FORECASTING / [code](https://github.com/OctopusLi/NeurIPS2022-traffic4cast)  / [checkpoints](https://drive.google.com/drive/folders/1-iqirakUhSjWoiKy-MRY5eRGPswE6F9-)                                                                                                                                                   |
+| discovery    | Florian Grötschla and Joël Mathys                     | Hierarchical Graph Structures for Congestion and ETA Prediction  / [code](https://github.com/floriangroetschla/NeurIPS2022-traffic4cast)  / [checkpoints](https://github.com/floriangroetschla/NeurIPS2022-traffic4cast/tree/main/t4c22/gnn_code/models)                                                                                                        |
+| ywei         | Ye Wei, He Haitao and Hui Fang                        | [SPATIAL-TEMPORAL CITY-SCALE CONGESTION PREDICTION USING A TWO-STREAM GRAPH NEURAL NETWORK](https://github.com/Ye-We1/Traffic4cast2022/blob/master/paper.pdf) / [code](https://github.com/Ye-We1/Traffic4cast2022)  / [checkpoints](https://github.com/Ye-We1/Traffic4cast2022/tree/master/checkpoint)                                                          |
+
+
 ## Competition Timeline
 * 27nd July 2022: training data and code for **Core Challenge** available (see https://www.iarai.ac.at/traffic4cast/challenge/)
 * 19th August 2022: test set release and leaderboard opens for **Core Challenge**
