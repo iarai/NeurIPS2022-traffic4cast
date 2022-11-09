@@ -68,8 +68,8 @@
 - [LONDON_2022.zip](https://developer.here.com/sample-data) from HERE (2.8 GB)
 - [MADRID_2022.zip](https://developer.here.com/sample-data) from HERE (4.0 GB)
 - [MELBOURNE_2022.zip](https://developer.here.com/sample-data) from HERE (0.9 GB)
-- [T4C_INPUTS_2022.zip](https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip) (1.0 GB)
-- [T4C_INPUTS_ETA_2022.zip](https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_ETA_2022.zip) (available September 2, 2022, 1.5MB)
+- [T4C_INPUTS_2022.zip](https://drive.google.com/uc?export=download&id=16MDOeCHVIjM9Sy3cvFP-XX8r7LH1gYFQ) (1.0 GB)
+- [T4C_INPUTS_ETA_2022.zip](https://drive.google.com/uc?export=download&id=1n_0_qJqhbFZY4mm2Yj8Q7CqsvsNkobFz) (available September 2, 2022, 1.5MB)
 - Tests for the core competition are contained in `T4C_INPUTS_2022.zip` above.
 - Tests for the extended competition are contained in `T4C_INPUTS_2022.zip` above (same as for core competition).
 
