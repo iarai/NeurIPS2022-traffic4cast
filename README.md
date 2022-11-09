@@ -465,8 +465,8 @@ ZIP files to the same working data directory (`<working_dir>`):
 - LONDON_2022.zip from https://developer.here.com/sample-data
 - MADRID_2022.zip from https://developer.here.com/sample-data
 - MELBOURNE_2022.zip from https://developer.here.com/sample-data
-- T4C_INPUTS_2022.zip from https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_2022.zip
-- T4C_INPUTS_ETA_2022.zip from https://iarai-public.s3-eu-west-1.amazonaws.com/competitions/t4c/t4c22/T4C_INPUTS_ETA_2022.zip
+- T4C_INPUTS_2022.zip from https://drive.google.com/uc?export=download&id=16MDOeCHVIjM9Sy3cvFP-XX8r7LH1gYFQ
+- T4C_INPUTS_ETA_2022.zip from https://drive.google.com/uc?export=download&id=1n_0_qJqhbFZY4mm2Yj8Q7CqsvsNkobFz
 
 
 
