@@ -2,6 +2,6 @@
 max-line-length = 160
 max-complexity = 10
 select = B,C,E,F,P,T4,W,B,B950
-extend-ignore = E203, E501
+extend-ignore = E203, E501, B028
 per-file-ignores =
     *_nb.py:E800
