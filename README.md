@@ -585,7 +585,7 @@ In the mean-time, see the examples under `exploration` with working data loading
 [Traffic4cast at NeurIPS 2022 - Predict Dynamics along Graph Edges from Sparse Node Data: Whole City Traffic and ETA from Stationary Vehicle Detectors](https://arxiv.org/abs/2303.07758)
 ```
 @misc{neun2023traffic4cast,
-      title={Traffic4cast at NeurIPS 2022 -- Predict Dynamics along Graph Edges from Sparse Node Data: Whole City Traffic and ETA from Stationary Vehicle Detectors}, 
+      title={Traffic4cast at NeurIPS 2022 -- Predict Dynamics along Graph Edges from Sparse Node Data: Whole City Traffic and ETA from Stationary Vehicle Detectors},
       author={Moritz Neun and Christian Eichenberger and Henry Martin and Markus Spanring and Rahul Siripurapu and Daniel Springer and Leyan Deng and Chenwang Wu and Defu Lian and Min Zhou and Martin Lumiste and Andrei Ilie and Xinhua Wu and Cheng Lyu and Qing-Long Lu and Vishal Mahajan and Yichao Lu and Jiezhang Li and Junjun Li and Yue-Jiao Gong and Florian Grötschla and Joël Mathys and Ye Wei and He Haitao and Hui Fang and Kevin Malm and Fei Tang and Michael Kopp and David Kreil and Sepp Hochreiter},
       year={2023},
       eprint={2303.07758},
