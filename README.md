@@ -582,8 +582,21 @@ In the mean-time, see the examples under `exploration` with working data loading
 
 
 ## Cite
-Please cite this repo along with the papers of the previous competitions:
+[Traffic4cast at NeurIPS 2022 - Predict Dynamics along Graph Edges from Sparse Node Data: Whole City Traffic and ETA from Stationary Vehicle Detectors](https://arxiv.org/abs/2303.07758)
+```
+@misc{neun2023traffic4cast,
+      title={Traffic4cast at NeurIPS 2022 -- Predict Dynamics along Graph Edges from Sparse Node Data: Whole City Traffic and ETA from Stationary Vehicle Detectors}, 
+      author={Moritz Neun and Christian Eichenberger and Henry Martin and Markus Spanring and Rahul Siripurapu and Daniel Springer and Leyan Deng and Chenwang Wu and Defu Lian and Min Zhou and Martin Lumiste and Andrei Ilie and Xinhua Wu and Cheng Lyu and Qing-Long Lu and Vishal Mahajan and Yichao Lu and Jiezhang Li and Junjun Li and Yue-Jiao Gong and Florian Grötschla and Joël Mathys and Ye Wei and He Haitao and Hui Fang and Kevin Malm and Fei Tang and Michael Kopp and David Kreil and Sepp Hochreiter},
+      year={2023},
+      eprint={2303.07758},
+      archivePrefix={arXiv},
+      primaryClass={cs.LG}
+}
+```
 
+### Previous competitions:
+
+[Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes](https://proceedings.mlr.press/v176/eichenberger22a/eichenberger22a.pdf)
 ```
 @InProceedings{pmlr-v176-eichenberger22a,
   title = 	 {Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes},
@@ -600,7 +613,9 @@ Please cite this repo along with the papers of the previous competitions:
   url = 	 {https://proceedings.mlr.press/v176/eichenberger22a.html},
   abstract = 	 {The IARAI Traffic4cast competitions at NeurIPS 2019 and 2020 showed that neural networks can successfully predict future traffic conditions 1 hour into the future on simply aggregated GPS probe data in time and space bins. We thus reinterpreted the challenge of forecasting traffic conditions as a movie completion task. U-Nets proved to be the winning architecture, demonstrating an ability to extract relevant features in this complex real-world geo-spatial process. Building on the previous competitions, Traffic4cast 2021 now focuses on the question of model robustness and generalizability across time and space. Moving from one city to an entirely different city, or moving from pre-COVID times to times after COVID hit the world thus introduces a clear domain shift. We thus, for the first time, release data featuring such domain shifts. The competition now covers ten cities over 2 years, providing data compiled from over $10^{12}$ GPS probe data. Winning solutions captured traffic dynamics sufficiently well to even cope with these complex domain shifts. Surprisingly, this seemed to require only the previous 1h traffic dynamic history and static road graph as input. }
 }
-
+```
+[Traffic4cast at NeurIPS 2020 - yet more on the unreasonable effectiveness of gridded geo-spatial processes](http://proceedings.mlr.press/v133/kopp21a/kopp21a.pdf)
+```
 @InProceedings{pmlr-v133-kopp21a,
   title =      {Traffic4cast at NeurIPS 2020 - yet more on the unreasonable effectiveness of gridded geo-spatial processes},
   author =       {Kopp, Michael and Kreil, David and Neun, Moritz and Jonietz, David and Martin, Henry and Herruzo, Pedro and Gruca, Aleksandra and Soleymani, Ali and Wu, Fanyou and Liu, Yang and Xu, Jingwei and Zhang, Jianjin and Santokhi, Jay and Bojesomo, Alabi and Marzouqi, Hasan Al and Liatsis, Panos and Kwok, Pak Hay and Qi, Qi and Hochreiter, Sepp},
@@ -616,7 +631,9 @@ Please cite this repo along with the papers of the previous competitions:
   url =      {https://proceedings.mlr.press/v133/kopp21a.html},
   abstract =      {The IARAI Traffic4cast competition at NeurIPS 2019 showed that neural networks can successfully predict future traffic conditions 15 minutes into the future on simply aggregated GPS probe data  in time and space bins, thus interpreting the challenge of forecasting traffic conditions as a movie completion task. U-nets proved to be the winning architecture then, demonstrating an ability  to extract relevant features in the complex, real-world, geo-spatial process that is traffic derived from a large data set. The IARAI Traffic4cast challenge at NeurIPS 2020 build on the insights of the previous year and sought to both challenge some assumptions inherent in our 2019 competition design and explore how far this neural network technique can be pushed. We found that the  prediction horizon can be extended successfully to 60 minutes into the future, that there is further evidence that traffic depends more on recent dynamics than on the additional static or dynamic location specific data provided and that a reasonable starting point when exploring a general aggregated geo-spatial process in time and space is a U-net architecture.}
 }
-
+```
+[The surprising efficiency of framing geo-spatial time series forecasting as a video prediction task – Insights from the IARAI \t4c Competition at NeurIPS 2019](http://proceedings.mlr.press/v123/kreil20a/kreil20a.pdf)
+```
 @InProceedings{pmlr-v123-kreil20a,
   title =      {The surprising efficiency of framing geo-spatial time series forecasting as a video prediction task – Insights from the IARAI \t4c Competition at NeurIPS 2019},
   author =       {Kreil, David P and Kopp, Michael K and Jonietz, David and Neun, Moritz and Gruca, Aleksandra and Herruzo, Pedro and Martin, Henry and Soleymani, Ali and Hochreiter, Sepp},
@@ -633,7 +650,3 @@ Please cite this repo along with the papers of the previous competitions:
   abstract =      {Deep Neural Networks models are state-of-the-art solutions in accurately forecasting future video frames in a movie.  A successful video prediction model needs to extract and encode semantic features that describe the complex spatio-temporal correlations within image sequences of the real world.  The IARAI Traffic4cast Challenge of the NeurIPS Competition Track 2019 for the first time introduced the novel argument that this is also highly relevant for urban traffic. By framing traffic prediction as a movie completion task, the challenge requires models to take advantage of complex geo-spatial and temporal patterns of the underlying process. We here report on the success and insights obtained in a first Traffic Map Movie forecasting challenge. Although short-term traffic prediction is considered hard, this novel approach allowed several research groups to successfully predict future traffic states in a purely data-driven manner from pixel space. We here expand on the original rationale, summarize key findings, and discuss promising future directions of the t4c competition at NeurIPS.}
 }
 ```
-
-* [Traffic4cast at NeurIPS 2021 - Temporal and Spatial Few-Shot Transfer Learning in Gridded Geo-Spatial Processes](https://proceedings.mlr.press/v176/eichenberger22a/eichenberger22a.pdf)
-* [Traffic4cast at NeurIPS 2020 - yet more on the unreasonable effectiveness of gridded geo-spatial processes](http://proceedings.mlr.press/v133/kopp21a/kopp21a.pdf)
-* [The surprising efficiency of framing geo-spatial time series forecasting as a video prediction task – Insights from the IARAI \t4c Competition at NeurIPS 2019](http://proceedings.mlr.press/v123/kreil20a/kreil20a.pdf)
