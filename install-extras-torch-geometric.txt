@@ -2,4 +2,4 @@ torch-scatter
 torch-sparse
 torch-cluster
 torch-spline-conv
-torch-geometric
+torch-geometric==2.2.0
