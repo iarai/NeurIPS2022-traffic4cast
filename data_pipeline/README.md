@@ -1,24 +1,23 @@
 # Traffic4cast 2022 Data Pipeline
 
-We will publish the code to generate the speed classifications from the traffic movies later in this sub-folder.
-
-### Color Scheme
-<img src="../img/data_pipeline_color_scheme.svg">
-
-### Symbols Used
-<img src="../img/data_pipeline_symbols.svg">
+The Traffic4cast 2022 competition dataset has inspired the new dataset and pipeline called MeTS-10 (Metropolitan Segment Traffic Speeds from Massive Floating Car Data in 10 Cities). This sub-folder contains instructions on how to use https://github.com/iarai/MeTS-10 for preparing data compatible with Traffic4cast 2022.
 
 
-## Data Pipeline Node Data: Vehicle Counts
-<img src="../img/data_pipeline_node_data.svg">
+## Static Road Graph Data
 
+The road graph data (nodes and edges) can be prepared using the scripts from from https://github.com/iarai/MeTS-10/tree/master/data_pipeline
+* `dp01_movie_aggregation.py`
+* `dp02_speed_clusters.py`
+* `dp03_road_graph.py`
 
+Run `dp03_road_graph.py`  with the following custom arguments:
+* `--custom_filter '["highway"~"motorway|motorway_link|trunk|primary|secondary|tertiary|unclassified|residential"]'`
+* `--parse_maxspeed` (needs to be enabled for Madrid)
+* `--heatmap_filter`
 
-| Item               | Description                |
-|--------------------|----------------------------|
-| download and preprocessing | Download the public data, purge and transform in intermediate common data format. |
-| postprocessing             | From the normalized loop counter data, join with OSM IDs. |
-| Grouping (+Sampling)       | Group 4 15-minute counts for input. Sample test data.      |
+The output files `road_graph_nodes.parquet`, `road_graph_edges.parquet`, `road_graph.gpkg` and `road_graph.graphml` will be written to `road_graph/<city>`.
+
+## Dynamic Node Data: Vehicle Counts
 
 ### Loop Counter Data Sources
 
@@ -30,14 +29,69 @@ We will publish the code to generate the speed classifications from the traffic 
 | London  | Highways England |[Highways England network journey time and traffic flow data](https://data.gov.uk/dataset/9562c512-4a0b-45ee-b6ad-afc0f99b841f/highways-england-network-journey-time-and-traffic-flow-data) | [Traffic Flow data - Sites and Historical Reports](https://webtris.highwaysengland.co.uk/)|  [Open Government Licence](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/) |
 
 
+### Vehicle Counter Data Pipeline
 
-## Data Pipeline Edge Data: Congestion Classes from GPS Speeds
+Vehicle loop counter data can be processed using the pipeline used for counter validations in MeTS-10: https://github.com/iarai/MeTS-10/tree/master/analysis/val02_counters
+
+This process requires the road graph data in `road_graph/<city>`.
+
+* `counters01_prepare_data.ipynb`: Downloads and processes the counter readings. Outputs `loop_counters/<CITY>/counters_normalized_{month}.parquet`
+* `counters02_match_counters.ipynb`: Merges the loop counter locations with the road graph and outputs `loop_counters/<CITY>/counters_matched.parquet`
+
+With this output
+
+```python
+def combine_1h_volume(xdf):
+    xdf = xdf.sort_values(['day'])
+    result = []
+    volumes_1h = []
+    for day, volume in zip(xdf['day'], xdf['volume']):
+        r = {
+            'day': day,
+            't': -1,
+            'volumes_1h': -1
+        }
+        for t, v in enumerate(volume):
+            volumes_1h.append(v)
+            if len(volumes_1h) != 5:
+                continue
+            r['t'] = t
+            r['volumes_1h'] = volumes_1h[:-1]
+            result.append(r.copy())
+            volumes_1h = volumes_1h[1:]
+    return pandas.DataFrame(result)
+
+def provision_loop_counter_input(city, month, days):
+    input_parquet = f'loop_counters/<CITY>/counters_normalized_{month}.parquet'
+    input_df = pandas.read_parquet(input_parquet)
+    print(f'Read {len(input_df)} rows from {input_parquet}')
+    input_df = input_df.reset_index()
+    input_df['node_id'] = input_df['node_id'].astype('int64')
+    input_df = input_df.groupby(by=['node_id']).apply(combine_1h_volume)
+    input_df = input_df.reset_index()
+    input_df = input_df[['node_id', 'day', 't', 'volumes_1h']]
+    for day in days:
+        provision_df = input_df[(input_df["day"]==day)]
+        print(f' Result rows: {len(provision_df)}')
+        print(f' Counters: {len(provision_df["node_id"].unique())}')
+        provision_parquet = f'train/{city}/input/counters_{day}.parquet'
+        provision_df.to_parquet(provision_parquet, compression='snappy')
+        print(f'Wrote training input to {provision_parquet}')
+```
+
+## Dynamic Edge Data: Congestion Classes from GPS Speeds
 <img src="../img/data_pipeline_edge_data.svg">
 
+The speed class data from MeTS-10 is compatible with the Traffic4cast 2022 process for CC labels: generate congestion classes (green=1, yellow=2, red=3) from the current segment medium speeds, the free flow speeds computed for the segment from the traffic map movies and the OSM signalled speeds. If no or not enough dynamic speed data is available, do not classify (unclassified=0).
 
-| Item               | Description                |
-|--------------------|----------------------------|
-| Road Selection     | Select OSM primary features of type "highway" in the bounding box, introduce nodes for loop counters and simplify the road graph (remove dead-ends and unconnected components etc.). |
-| Spatial Join       | Intersect OSM roads geometries with map movie cell geometries. |
-| Combination        | Combine Traffic Map values with OSM IDs. |
-| Generate CC Labels | Generate congestion classes (green=1, yellow=2, red=3) from the current segment medium speeds, the free flow speeds computed for the segment from the traffic map movies and the OSM signalled speeds. If no or not enough dynamic speed data is available, do not classify (unclassified=0). |
+Use the scripts from https://github.com/iarai/MeTS-10/tree/master/data_pipeline after running steps 1-3 above:
+* `dp04_intersecting_cells.py`
+* `dp05_free_flow.py`
+* `dp06_speed_classes.py`
+
+Run `dp05_free_flow.py`  with the following custom arguments:
+* `--use_speed_limit`
+
+Outputs of `dp06_speed_classes.py` will be stored as `speed_classes_<date>.parquet` to `speed_classes/<city>`.
+
+With these outputs `t4c22/prepare_training_data_cc.py` can be used to generate the training labels.
