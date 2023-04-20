@@ -17,6 +17,8 @@ Run `dp03_road_graph.py`  with the following custom arguments:
 
 The output files `road_graph_nodes.parquet`, `road_graph_edges.parquet`, `road_graph.gpkg` and `road_graph.graphml` will be written to `road_graph/<city>`.
 
+Be aware of README_DATA_SPECIFICATION.md in this repo and in MeTS-10 for minor differences in the attribute names.
+
 ## Dynamic Node Data: Vehicle Counts
 
 ### Loop Counter Data Sources
@@ -35,10 +37,13 @@ Vehicle loop counter data can be processed using the pipeline used for counter v
 
 This process requires the road graph data in `road_graph/<city>`.
 
-* `counters01_prepare_data.ipynb`: Downloads and processes the counter readings. Outputs `loop_counters/<CITY>/counters_normalized_{month}.parquet`
+* `counters01_prepare_data.ipynb`: Downloads and processes the counter readings. Outputs `loop_counters/<CITY>/counters_normalized_{month}.parquet` (this is compatbile with the files `counters_daily_by_node` referred to in the data spec)
 * `counters02_match_counters.ipynb`: Merges the loop counter locations with the road graph and outputs `loop_counters/<CITY>/counters_matched.parquet`
 
-With this output
+For the road graph `counters_matched.parquet` needs to be merged with `road_graph_nodes.parquet`.
+As snippet will be provided here: TODO
+
+With this output you can use the following snippet to create loop counter inputs for the Traffic4cast setup:
 
 ```python
 def combine_1h_volume(xdf):
